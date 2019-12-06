@@ -58,7 +58,7 @@ public:
 class Cfg {
 public:
 	Cfg():
-		window_title_("xxdialog") {
+		title_("xxdialog") {
 	}
 	bool Init(int argc, char **argv) {
 		std::vector<std::string> possible_args = {"-T", "-I", "-C", "-R"};
@@ -68,7 +68,7 @@ public:
 				if (argc > i+1
 						&& !std::any_of(possible_args.begin(), possible_args.end(),
 														[=](std::string k){return k==argv[i+1];})) {
-					window_title_ = argv[++i];
+					title_ = argv[++i];
 					continue;
 				} else {
 					return false;
@@ -88,21 +88,54 @@ public:
 						//std::cout << arg << " ";
 						sentense.push_back(arg);
 					}
-					ordered_sentenses_.push_back(sentense);
+					sentenses_.push_back(sentense);
 			}
 		}
 		return true;
 	}
-	std::string window_title() {return window_title_;}
+	std::string title() {return title_;}
+	std::vector<std::vector<std::string> > sentenses() {return sentenses_;}
 
 private:
-	std::string window_title_;
-	std::vector<std::vector<std::string> > ordered_sentenses_;
+	std::string title_;
+	std::vector<std::vector<std::string> > sentenses_;
+};
+
+class Panel {
+public:
+	Panel(int& current_height, std::vector<std::string> sentense):
+			current_height_(current_height),
+			sentense_(sentense){}
+	virtual std::string result() = 0;
+	virtual ~Panel();
+	int& current_height_;
+	std::vector<std::string> sentense_;
+};
+
+class Input: public Panel {
+public:
+	Input(int current_height, std::vector<std::string> sentense)
+		: Panel(current_height,sentense) {
+		current_height_ += 1;
+	}
+	~Input();
+	std::string result() {
+		return "asdf";
+	}
+};
+
+class Check: Panel {
+public:
+};
+
+class Radio: Panel {
+public:
 };
 
 class Xxdialog {
 public:
-	Xxdialog() {
+	Xxdialog():
+			current_height_(0) {
 		// Рассчитываем размеры под размер А5 - 148х210мм, и высота строки 10мм
 		int window_width_mm = 210;
 		int window_height_mm = 148;
@@ -120,16 +153,29 @@ public:
 		}
 		window_x_ = static_cast<int>((screen_w - window_w_) / 2);
 		window_y_ = static_cast<int>((screen_h - window_h_) / 2);
-		std::cout << window_x_ << " "<< window_y_ << " "<< window_w_ << " "<< window_h_ << std::endl;
 	}
 
-	int Run() {
-		Fl_Window *window = new Fl_Window(window_x_, window_y_, window_w_, window_h_);
+	int Run(std::string title, std::vector<std::vector<std::string> > sentenses) {
+		Fl_Window *window = new Fl_Window(window_x_, window_y_, window_w_, window_h_,title.data());
+		std::cout << current_height_ << std::endl;
+		for (const std::vector<std::string>&sentense : sentenses) {
+			std::string key = sentense.at(0);
+			if (key == "-I") {
+				Input* panel = new Input(current_height_, sentense);
+			} else if (key == "-C") {
+
+			} else if (key == "-R") {
+
+			}
+		}
+		std::cout << current_height_ << std::endl;
 		window->show();
 		return Fl::run();
 	}
 private:
+	int current_height_;
 	int window_x_, window_y_, window_w_, window_h_;
+	std::vector<Panel*> panels;
 };
 
 int usage() {
@@ -155,8 +201,8 @@ int main(int argc, char **argv) {
 	if (!cfg->Init(argc, argv)) {
 		exit(1);
 	}
-	Xxdialog* xxdialog = new Xxdialog;
-	return xxdialog->Run();
+	Xxdialog* xxdialog = new Xxdialog();
+	return xxdialog->Run(cfg->title(), cfg->sentenses());
 
 
 	std::vector<Item*> items;
