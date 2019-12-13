@@ -92,6 +92,14 @@ public:
                 sentenses_.push_back(sentense);
             }
         }
+        widest_label_width_ = 0;
+        for (const std::vector<std::string>&sentense : sentenses_) {
+            std::string label = sentense.at(1);
+            int label_width = static_cast<int>(label.length());
+            if (label_width > widest_label_width_)
+                widest_label_width_ = label_width;
+        }
+
         return true;
     }
     std::string title() {return title_;}
@@ -100,48 +108,36 @@ public:
 private:
     std::string title_;
     std::vector<std::vector<std::string> > sentenses_;
+    int widest_label_width_;
 };
 
-class Panel {
+class Panel: public Fl_Box {
 public:
-    Panel(int y, int width, int line_height, std::string title)
-        :y_(y), width_(width), title_(title), title_offset_(0) {
-        widget_ = new Fl_Box(FL_THIN_UP_BOX,
-                             0,
-                             y_,
-                             width_,
-                             line_height,
-                             title_.c_str());
-        widget_->align(FL_ALIGN_INSIDE|FL_ALIGN_LEFT);
-        title_offset_ = static_cast<int>(fl_width(title_.c_str()));
-        height_ = line_height;
-        margin_ = line_height / 8;
+    Panel(int y, int width, int height, const char * title)
+            : Fl_Box(FL_THIN_UP_BOX,0,y,width,height,title), title_offset_(0) {
+        this->align(FL_ALIGN_INSIDE|FL_ALIGN_LEFT);
+        const int title_to_contents_width_ratio = 5; /// Для красоты.
+        title_offset_ = static_cast<int>(w()/title_to_contents_width_ratio);
+        margin_ = height / 5;
     }
     virtual std::string result() = 0;
-    int Height() {return height_;}
+    int Height() {return h();}
     int TitleOffset() {return title_offset_;}
-    int RemainingWidth() {return width_ - title_offset_;}
+    int RemainingWidth() {return w() - title_offset_;}
     int Margin() {return margin_;}
 private:
-    int y_;
-    int width_;
-    int height_;
     int margin_;
-    std::string title_;
     int title_offset_;
-    Fl_Widget* widget_;
 };
 
 class Input: public Panel {
 public:
-    Input(int y, int width, int line_height, std::string title)
-        :Panel(y, width, line_height, title) {
+    Input(int y, int width, int height, const char * title)
+            : Panel(y, width, height, title) {
         input_ = new Fl_Input(TitleOffset()+Margin(),
                               y+Margin(),
                               width-TitleOffset()-2*Margin(),
                               Height()-2*Margin());
-        //		input_->labelsize(line_height/2);
-        //		input_->labelfont(FL_BOLD);
     }
     std::string result() {
         return std::string(input_->value());
@@ -162,14 +158,16 @@ class Xxdialog {
 public:
     Xxdialog(std::string title, std::vector<std::vector<std::string> > sentenses)
         : title_(title), sentenses_(sentenses) {
-        Fl_Window* window_ = new Fl_Window(0, 0, 0, 0, title_.data());
+        Fl_Window * window_ = new Fl_Window(0, 0, 0, 0, title_.data());
+        Fl_Scroll * scroll = new Fl_Scroll(0, 0, 0, 0);
+        scroll->type(Fl_Scroll::VERTICAL);
 
         int screen_num = 0;
         Fl::screen_work_area(work_area_x_, work_area_y_, work_area_w_, work_area_h_, screen_num);
 
         fl_font(FL_HELVETICA, FL_NORMAL_SIZE);
         double width_for_80_columns_ = fl_width('W')*80;
-        line_height_ = fl_height()*2;
+        font_height_ = fl_height();
 
         /** Изначально ширину окна рассчитваем, чтобы был вмещал 80 символов,
          * и в высоту чтобы сохранялась пропорциональность экрана.
@@ -180,15 +178,18 @@ public:
         int y_offset = 0;
         for (const std::vector<std::string>&sentense : sentenses_) {
             Panel* panel = nullptr;
+            const char * label = sentense.at(1).c_str();
             std::string key = sentense.at(0);
+            int panel_height = font_height_ * 3;
             if (key == "-I") {
-                panel = new Input(y_offset, window_w, line_height_, sentense.at(1));
+                panel = new Input(y_offset, window_w, panel_height, label);
             } else if (key == "-C") {
 
             } /*else if (key == "-R") {
 
             }*/
             if (panel) {
+                scroll->add(panel);
                 panels.push_back(panel);
                 y_offset += panel->Height();
             }
@@ -197,7 +198,7 @@ public:
         /** Если суммарная высота всех панелей и кнопки меньше рассчитаной
          * высоты окна, то уменьшаем высоту окна, по сути, для красоты.
          */
-        int real_height = y_offset + line_height_;
+        int real_height = y_offset + font_height_;
         if (real_height < window_h)
             window_h = real_height;
 
@@ -218,6 +219,7 @@ public:
         int window_y = static_cast<int>((work_area_h_ - window_h) / 2 + work_area_y_);
 
         window_->resize(window_x, window_y, window_w, window_h);
+        scroll->resize(0, 0, window_w, window_h);
         window_->show();
     }
 
@@ -228,7 +230,7 @@ private:
     int work_area_x_, work_area_y_, work_area_w_, work_area_h_;
     std::string title_;
     std::vector<std::vector<std::string> > sentenses_;
-    int line_height_;
+    int font_height_;
     std::vector<Panel*> panels;
 };
 
