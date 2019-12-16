@@ -230,11 +230,11 @@ public:
     int ok_cancel_width = window_w / 2;
     Fl_Return_Button* ok = new Fl_Return_Button(0,cumulative_height,ok_cancel_width,panel_height,"OK");
     ok->color(0x66CC6600);
+
     Fl_Button* cancel = new Fl_Button(ok_cancel_width,cumulative_height,ok_cancel_width,panel_height,"Cancel");
-    auto fun=+[](Fl_Widget *w, void *data){
-      std::cout << "cancel pressed" << std::endl;
-    };
-    cancel->callback(fun);
+    cancel->callback(+[](Fl_Widget *w, void *data){
+      exit(1);
+    });
     cumulative_height += panel_height;
 
     // Если суммарная высота всех панелей и кнопки меньше рассчитаной
