@@ -1,3 +1,5 @@
+#include "xxdialog.h"
+
 #include <algorithm>
 #include <functional>
 #include <iostream>
@@ -153,20 +155,21 @@ private:
 };
 
 
-class Check: public Panel {
+template <class T>
+class Z: public Panel {
 public:
-  Check(int y, int width, int height, std::string label,
-        std::vector<std::string> options)
-    : Panel(y, width, height, label) {
+  Z(int y, int width, int height, std::string label,
+    std::vector<std::string> options)
+      : Panel(y, width, height, label) {
     int number_of_options = options.size();
     int option_width = RemainingWidth() / number_of_options;
     int option_x_offset = TitleOffset();
     for(auto const& option: options) {
-      Fl_Check_Button* button = new Fl_Check_Button(
+      T* button = new T(
             option_x_offset, y, option_width, height);
       button->copy_label(option.c_str());
       option_x_offset += option_width;
-      check_buttons_.push_back(button);
+      buttons.push_back(button);
     }
     end();
   }
@@ -174,8 +177,9 @@ public:
     return "";
   }
 private:
-  std::vector<Fl_Check_Button*> check_buttons_;
+  std::vector<T*> buttons;
 };
+
 
 
 class Radio: Panel {
@@ -207,12 +211,15 @@ public:
       Panel* panel = nullptr;
       std::string key = sentense.at(0);
       std::string panel_label = sentense.at(1);
-      std::vector<std::string> options =
+      std::vector<std::string> options;
+      options.assign(sentense.begin()+2, sentense.end());
       int panel_height = font_height_ * 3;
       if (key == "-I") {
         panel = new Input(y_offset, window_w, panel_height, panel_label);
       } else if (key == "-C") {
-        panel = new Check(y_offset, window_w, panel_height, panel_label, sentense);
+        panel = new Z<Fl_Check_Button>(y_offset, window_w, panel_height, panel_label, options);
+      } else if (key == "-R") {
+        panel = new Z<Fl_Radio_Round_Button>(y_offset, window_w, panel_height, panel_label, options);
       }
       if (panel) {
         scroll->add(panel);
