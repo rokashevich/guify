@@ -1,5 +1,3 @@
-#include "xxdialog.h"
-
 #include <algorithm>
 #include <functional>
 #include <iostream>
@@ -200,39 +198,46 @@ public:
     fl_font(FL_HELVETICA, FL_NORMAL_SIZE);
     double width_for_80_columns_ = fl_width('W')*80;
     font_height_ = fl_height();
+    int panel_height = font_height_ * 3;
 
     // Изначально ширину окна рассчитваем, чтобы был вмещал 80 символов,
     // и в высоту чтобы сохранялась пропорциональность экрана.
     int window_w = static_cast<int>(width_for_80_columns_);
     int window_h = static_cast<int>(window_w * work_area_h_ / work_area_w_);
 
-    int y_offset = 0;
+    int cumulative_height = 0;
     for (const std::vector<std::string>&sentense : sentenses_) {
       Panel* panel = nullptr;
       std::string key = sentense.at(0);
       std::string panel_label = sentense.at(1);
       std::vector<std::string> options;
       options.assign(sentense.begin()+2, sentense.end());
-      int panel_height = font_height_ * 3;
+
       if (key == "-I") {
-        panel = new Input(y_offset, window_w, panel_height, panel_label);
+        panel = new Input(cumulative_height, window_w, panel_height, panel_label);
       } else if (key == "-C") {
-        panel = new Z<Fl_Check_Button>(y_offset, window_w, panel_height, panel_label, options);
+        panel = new Z<Fl_Check_Button>(cumulative_height, window_w, panel_height, panel_label, options);
       } else if (key == "-R") {
-        panel = new Z<Fl_Radio_Round_Button>(y_offset, window_w, panel_height, panel_label, options);
+        panel = new Z<Fl_Radio_Round_Button>(cumulative_height, window_w, panel_height, panel_label, options);
       }
       if (panel) {
         scroll->add(panel);
         panels.push_back(panel);
-        y_offset += panel->Height();
+        cumulative_height += panel->Height();
       }
     }
 
+    int ok_cancel_width = window_w / 2;
+    Fl_Return_Button* ok = new Fl_Return_Button(0,cumulative_height,ok_cancel_width,panel_height,"OK");
+    ok->color(0x66CC6600);
+    Fl_Button* cancel = new Fl_Button(ok_cancel_width,cumulative_height,ok_cancel_width,panel_height,"Cancel");
+    cancel->callback(ok_callback, &items);
+    cumulative_height += panel_height;
+
     // Если суммарная высота всех панелей и кнопки меньше рассчитаной
     // высоты окна, то уменьшаем высоту окна, по сути, для красоты.
-    int real_height = y_offset + font_height_;
-    if (real_height < window_h)
-      window_h = real_height;
+    if (cumulative_height < window_h)
+      window_h = cumulative_height;
 
     // Если после подгонки размера окна под содержимое оно всё равно больше
     // рабочей области монитора, делаем окно программы размером с рабочую
@@ -291,125 +296,9 @@ int main(int argc, char **argv) {
   return xxdialog->Run();
 
 
-  std::vector<Item*> items;
-  std::vector<std::string> possible_args = {"-T", "-I", "-C", "-R"};
 
 
-  // Рассчитываем размеры под размер А5 - 148х210мм, и высота строки 10мм
-  int window_width_mm = 210;
-  int window_height_mm = 148;
-  int screen_n = 0; // если несколько мониторов считаем по первому
-  float inch = 25.4f; // миллиметров в дюйме
-  float dpi_hor, dpi_vert;
-  Fl::screen_dpi(dpi_hor, dpi_vert, screen_n);
-  int window_width_px = static_cast<int>(window_width_mm * dpi_hor / inch);
-  int window_height_px = static_cast<int>(window_height_mm * dpi_vert / inch);
-  int screen_x, screen_y, screen_w, screen_h;
-  Fl::screen_work_area(screen_x, screen_y, screen_w, screen_h, screen_n);
-  if (window_width_px > screen_w || window_height_px > screen_h) {
-    window_width_px = screen_w;
-    window_height_px = screen_h;
-  }
-  int window_x = static_cast<int>((screen_w - window_width_px) / 2);
-  int window_y = static_cast<int>((screen_h - window_height_px) / 2);
 
-
-  Fl_Window *window = new Fl_Window(window_x, window_y, window_width_px,window_height_px);
-  window->size_range(window_width_px,window_height_px);
-
-  Fl_Scroll *scroll = new Fl_Scroll(0,0,500,450);
-  scroll->type(Fl_Scroll::VERTICAL);
-  scroll->end();
-  for (int i = 1; i < argc; ++i) {
-    std::string arg = std::string(argv[i]);
-    if (arg == "-T") {
-      if (argc > i+1
-          && !std::any_of(possible_args.begin(), possible_args.end(),
-                          [=](std::string k){return k==argv[i+1];})) {
-        window->label(argv[++i]);
-        continue;
-      } else
-        exit(usage());
-    }
-    if (arg == "-I") {
-      if (argc > i+1
-          && !std::any_of(possible_args.begin(), possible_args.end(),
-                          [=](std::string k){return k==argv[i+1];})) {
-        int y = 100*static_cast<int>(items.size());
-        ItemInput* input = new ItemInput;
-        input->description = new Fl_Box(FL_ENGRAVED_BOX,0,y,500,100, argv[++i]);
-        input->description->align(FL_ALIGN_INSIDE|FL_ALIGN_TOP);
-        input->field = new Fl_Input(input->description->x()+5,
-                                    input->description->y()+50,
-                                    input->description->w()-10,45);
-        items.push_back(input);
-        scroll->add(input->description);
-        scroll->add(input->field);
-        continue;
-      } else
-        exit(usage());
-    }
-    if (arg == "-C"
-        && !std::any_of(possible_args.begin(), possible_args.end(),
-                        [=](std::string k){return k==argv[i+1];})) {
-      std::string checkboxes_description;
-      std::vector<std::string> checkboxes_words;
-      if (argc > i+2) {
-        ItemCheck* check = new ItemCheck;
-        check->description = new Fl_Box(FL_ENGRAVED_BOX,0,25*static_cast<int>(items.size()),500,25, argv[++i]);
-        scroll->add(check->description);
-        for (int j = i; j < argc; ++j) {
-          const std::string search = std::string(argv[j]);
-          if (std::any_of(possible_args.begin(), possible_args.end(),
-                          [=](std::string i){return i==search;})) {
-            break;
-          }
-          std::string word = std::string(argv[i++]);
-          checkboxes_words.push_back(word);
-          std::cout << "words: " << word << std::endl;
-        }
-      } else {
-        exit(usage());
-      }
-    }
-    if (arg == "-R"
-        && !std::any_of(possible_args.begin(), possible_args.end(),
-                        [=](std::string k){return k==argv[i+1];})) {
-      std::string radiobuttons_description;
-      std::vector<std::string> radiobuttons_items;
-      if (argc > i+3) {
-        ItemRadio* radio = new ItemRadio;
-        radio->description = new Fl_Box(FL_ENGRAVED_BOX,5,50*static_cast<int>(items.size()),300,50, argv[++i]);
-        radio->description->align(FL_ALIGN_BOTTOM);
-        Fl_Group *g = new Fl_Group(0,0,250,250);
-        g->add(radio->description);
-        for (int j = i; j < argc; ++j) {
-          const std::string search = std::string(argv[j]);
-          if (std::any_of(possible_args.begin(), possible_args.end(),
-                          [=](std::string i){return i==search;})) {
-            break;
-          }
-          std::string word = std::string(argv[j]);
-          radiobuttons_items.push_back(word);
-          Fl_Radio_Round_Button* rb = new Fl_Radio_Round_Button(0,25*(j-i)+50,200,25,argv[j]);
-          g->add(rb);
-          std::cout << i << "words: " << word << std::endl;
-        }
-        g->end();
-        std::cout << g->children()  << " " << std::endl;//<< dynamic_cast<Fl_Radio_Round_Button*>(g->child(0))->value() << std::endl;
-      } else {
-        exit(usage());
-      }
-    }
-  }
-
-  HorizontalLine* lines = new HorizontalLine(0,0,300,300);
-  window->add(lines);
-
-  //Fl_Return_Button* ok = new Fl_Return_Button(0,200,250,50,"OK");
   //ok->callback(ok_callback, &items);
 
-  window->resizable(scroll);
-  window->show();
-  return Fl::run();
 }
