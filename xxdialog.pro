@@ -17,3 +17,5 @@ DEFINES += SOURCES_VERSION=\\\"$$(SVN_REVISION)\\\"
 SOURCES +=  \
     main.cpp
 
+DESTDIR=$$PWD # Кладём итоговый бинарник в эту же папку с исходниками.
+
