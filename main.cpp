@@ -1,6 +1,3 @@
-#include <boost/algorithm/string/join.hpp>
-#include <boost/algorithm/string/replace.hpp>
-
 #include <algorithm>
 #include <functional>
 #include <iostream>
@@ -8,6 +5,10 @@
 #include <cstring>
 #include <vector>
 #include <utility>
+
+#include <boost/algorithm/string/join.hpp>
+#include <boost/algorithm/string/replace.hpp>
+
 #include <FL/Fl.H>
 #include <FL/Fl_Widget.H>
 #include <FL/Fl_Window.H>
@@ -19,11 +20,15 @@
 #include <FL/Fl_Scroll.H>
 #include <FL/fl_draw.H>
 
+// Назначение класса - распарсить аргументы командной строки.
+// Помимо проверки введённых параметров на правильность,
+// производится поиск:
+//   - самого длинного названия панели (левый столбик);
+//   - самый длинный вариант;
+//   - наибольшее кол-во вариантов в панели.
+// Эти поля будут нужны для красивой компоновки виджетов в классе Xxdialog.
 class Cfg {
 public:
-  Cfg():
-    title_("xxdialog") {
-  }
   bool Init(int argc, char **argv) {
     std::vector<std::string> possible_args = {"-T", "-I", "-C", "-R"};
     for (int i = 1; i < argc; ++i) {
@@ -49,59 +54,68 @@ public:
             --i;
             break;
           }
-          //std::cout << arg << " ";
           sentense.push_back(arg);
         }
         sentenses_.push_back(sentense);
       }
     }
-    widest_label_width_ = 0;
+
     for (const std::vector<std::string>&sentense : sentenses_) {
+      // Ищем самое длинное название панели.
       std::string label = sentense.at(1);
-      int label_width = static_cast<int>(label.length());
-      if (label_width > widest_label_width_)
-        widest_label_width_ = label_width;
+      if (label.length() > longest_panel_name_.length())
+        longest_panel_name_ = label;
+
+      // Ищем самый длинный вариант и набольшее кол-во вариантов.
+      int options_in_this_sentense = 0;
+      std::vector<std::string> options = sentense;
+      options.erase(options.begin(), options.begin()+2);
+      for (const std::string& option: options) {
+        ++options_in_this_sentense;
+        if (option.length() > longest_option_name_.length())
+          longest_option_name_ = option;
+      }
+      if (options_in_this_sentense > max_options_count_)
+        max_options_count_ = options_in_this_sentense;
     }
 
     return true;
   }
-  std::string title() {return title_;}
-  std::vector<std::vector<std::string> > sentenses() {return sentenses_;}
+  std::string Title() {return title_;}
+  std::vector<std::vector<std::string> > Sentenses() {return sentenses_;}
+  std::string LongestPanelName() {return longest_panel_name_;}
+  std::string LongestOptionName() {return longest_option_name_;}
+  int MaxOptinsCount() {return max_options_count_;}
 
 private:
-  std::string title_;
+  std::string title_ {"xxdialog"};
   std::vector<std::vector<std::string> > sentenses_;
-  int widest_label_width_;
+  std::string longest_panel_name_; // Самое длинное название панели.
+  std::string longest_option_name_ {""}; // Самый длинный ваирант.
+  int max_options_count_ {0}; // Наибольшее кол-во вариантов в одной панели.
 };
 
-
+// Базовый класс панели.
 class Panel: public Fl_Group {
 public:
   Panel(int y, int width, int height, std::string title)
-    : Fl_Group(0,y,width,height), title_offset_(0) {
+    : Fl_Group(0,y,width,height) {
     this->copy_label(title.c_str());
     this->box(FL_THIN_UP_BOX);
     this->align(FL_ALIGN_INSIDE|FL_ALIGN_LEFT);
-    const int title_to_contents_width_ratio = 5; /// Для красоты.
-    title_offset_ = static_cast<int>(w()/title_to_contents_width_ratio);
     // Наследуя этот класс не забываем добавить end() в конце конструктора!
   }
   virtual std::string result() = 0;
   int Height() {return h();}
-  int TitleOffset() {return title_offset_;}
-  int RemainingWidth() {return w() - title_offset_;}
-private:
-  int title_offset_;
 };
-
 
 class Input: public Panel {
 public:
-  Input(int y, int width, int height, std::string label)
+  Input(int y, int panel_name_width, int width, int height, std::string label)
     : Panel(y, width, height, label) {
-    input_ = new Fl_Input(TitleOffset(),
+    input_ = new Fl_Input(panel_name_width,
                           y,
-                          width-TitleOffset()-Fl::scrollbar_size(),
+                          width - panel_name_width - Fl::scrollbar_size(),
                           Height());
     end();
   }
@@ -112,21 +126,17 @@ private:
   Fl_Input* input_;
 };
 
-
 template <class T>
 class Z: public Panel {
 public:
-  Z(int y, int width, int height, std::string label,
-    std::vector<std::string> options)
+  Z(int y, int panel_name_width, int width, int height, std::string label,
+    std::vector<std::string> options, int option_width)
       : Panel(y, width, height, label) {
-    int number_of_options = static_cast<int>(options.size());
-    int option_width = RemainingWidth() / number_of_options;
-    int option_x_offset = TitleOffset();
     for(auto const& option: options) {
       T* button = new T(
-            option_x_offset, y, option_width, height);
+            panel_name_width, y, option_width, height);
       button->copy_label(option.c_str());
-      option_x_offset += option_width;
+      panel_name_width += option_width;
       buttons.push_back(button);
     }
     end();
@@ -146,27 +156,31 @@ private:
 
 class Xxdialog {
 public:
-  Xxdialog(std::string title, std::vector<std::vector<std::string> > sentenses)
-    : title_(title), sentenses_(sentenses) {
-    Fl_Window * window_ = new Fl_Window(0, 0, 0, 0, title_.data());
+  Xxdialog(Cfg* cfg) {
+    Fl_Window * window_ = new Fl_Window(0, 0, 0, 0, cfg->Title().data());
     Fl_Scroll * scroll = new Fl_Scroll(0, 0, 0, 0);
     scroll->type(Fl_Scroll::VERTICAL);
+    scroll->begin();
 
     int screen_num = 0;
     Fl::screen_work_area(work_area_x_, work_area_y_, work_area_w_, work_area_h_, screen_num);
 
     fl_font(FL_HELVETICA, FL_NORMAL_SIZE);
-    double width_for_80_columns_ = fl_width('w') * 80;
-    font_height_ = fl_height();
-    int panel_height = font_height_ * 3;
+
+    int u = fl_height();
+    int panel_height = u * 3;
+
+    int panel_name_width = fl_width(cfg->LongestPanelName().data()) + u;
+    int option_width = fl_width(cfg->LongestOptionName().data()) + u + u;
+    int contents_width = option_width * cfg->MaxOptinsCount();
 
     // Изначально ширину окна рассчитваем, чтобы был вмещал 80 символов,
     // и в высоту чтобы сохранялась пропорциональность экрана.
-    int window_w = static_cast<int>(width_for_80_columns_);
-    int window_h = static_cast<int>(window_w * work_area_h_ / work_area_w_);
+    int window_w = panel_name_width + contents_width;
+    int window_h = window_w * work_area_h_ / work_area_w_;
 
     int cumulative_height = 0;
-    for (const std::vector<std::string>&sentense : sentenses_) {
+    for (const std::vector<std::string>&sentense : cfg->Sentenses()) {
       Panel* panel = nullptr;
       std::string key = sentense.at(0);
       std::string panel_label = sentense.at(1);
@@ -174,13 +188,16 @@ public:
       options.assign(sentense.begin()+2, sentense.end());
 
       if (key == "-I") {
-        panel = new Input(cumulative_height, window_w, panel_height, panel_label);
+        panel = new Input(cumulative_height, panel_name_width, window_w,
+              panel_height, panel_label);
       } else if (key == "-C") {
         panel = new Z<Fl_Check_Button>(
-          cumulative_height, window_w, panel_height, panel_label, options);
+              cumulative_height, panel_name_width, window_w, panel_height,
+              panel_label, options, option_width);
       } else if (key == "-R") {
         panel = new Z<Fl_Radio_Round_Button>(
-          cumulative_height, window_w, panel_height, panel_label, options);
+              cumulative_height, panel_name_width, window_w, panel_height,
+              panel_label, options, option_width);
       }
       if (panel) {
         scroll->add(panel);
@@ -188,31 +205,7 @@ public:
         cumulative_height += panel->Height();
       }
     }
-
-    // После всех паналей снизу окна программы рисуем кнопки OK и Cancel,
-    // каждая в пол-окна шириной.
-    int ok_cancel_width = window_w / 2;
-
-    // Снизу-слева кнопка ОК.
-    Fl_Return_Button* ok = new Fl_Return_Button(0,cumulative_height,ok_cancel_width,panel_height,"OK");
-
-    // По кнопке OK построчно выводим значения панелей и выходим по exit(0).
-    ok->callback([](Fl_Widget *, void *x){
-      std::vector<Panel*>* panels = static_cast<std::vector<Panel*>*>(x);
-      for (Panel* a: *panels) {
-        std::string result = boost::replace_all_copy(a->result(), " ", "\\ ");
-        std::cout << result << std::endl;
-      }
-      exit(0);
-      },static_cast<void*>(&panels_));
-
-    // Снизу-справа кнопка Cancel.
-    Fl_Button* cancel = new Fl_Button(ok_cancel_width,cumulative_height,ok_cancel_width,panel_height,"Cancel");
-
-    // По кнопке Cancel программа просто выходит по exit(1).
-    cancel->callback([](Fl_Widget *, void *){
-      exit(1);
-      });
+    scroll->end();
 
     cumulative_height += panel_height;
 
@@ -236,7 +229,33 @@ public:
     int window_y = static_cast<int>((work_area_h_ - window_h) / 2 + work_area_y_);
 
     window_->resize(window_x, window_y, window_w, window_h);
-    scroll->resize(0, 0, window_w, window_h);
+    scroll->resize(0, 0, window_w, window_h - panel_height);
+
+    // После всех паналей снизу окна программы рисуем кнопки OK и Cancel,
+    // каждая в пол-окна шириной.
+    int ok_cancel_width = window_w / 2;
+
+    // Снизу-слева кнопка ОК.
+    Fl_Return_Button* ok = new Fl_Return_Button(0,window_h-panel_height,ok_cancel_width,panel_height,"OK");
+
+    // По кнопке OK построчно выводим значения панелей и выходим по exit(0).
+    ok->callback([](Fl_Widget *, void *x){
+      std::vector<Panel*>* panels = static_cast<std::vector<Panel*>*>(x);
+      for (Panel* a: *panels) {
+        std::string result = boost::replace_all_copy(a->result(), " ", "\\ ");
+        std::cout << result << std::endl;
+      }
+      exit(0);
+      },static_cast<void*>(&panels_));
+
+    // Снизу-справа кнопка Cancel.
+    Fl_Button* cancel = new Fl_Button(ok_cancel_width,window_h-panel_height,ok_cancel_width,panel_height,"Cancel");
+
+    // По кнопке Cancel программа просто выходит по exit(1).
+    cancel->callback([](Fl_Widget *, void *){
+      exit(1);
+      });
+
     window_->show();
   }
 
@@ -244,10 +263,8 @@ public:
     return Fl::run();
   }
 private:
+  Cfg* cfg;
   int work_area_x_, work_area_y_, work_area_w_, work_area_h_;
-  std::string title_;
-  std::vector<std::vector<std::string> > sentenses_;
-  int font_height_;
   std::vector<Panel*> panels_;
 };
 
@@ -265,6 +282,6 @@ int main(int argc, char **argv) {
   if (!cfg->Init(argc, argv)) {
     exit(1);
   }
-  Xxdialog* xxdialog = new Xxdialog(cfg->title(), cfg->sentenses());
+  Xxdialog* xxdialog = new Xxdialog(cfg);
   return xxdialog->Run();
 }
