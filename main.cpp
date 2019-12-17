@@ -1,4 +1,5 @@
 #include <boost/algorithm/string/join.hpp>
+#include <boost/algorithm/string/replace.hpp>
 
 #include <algorithm>
 #include <functional>
@@ -158,7 +159,7 @@ public:
     Fl::screen_work_area(work_area_x_, work_area_y_, work_area_w_, work_area_h_, screen_num);
 
     fl_font(FL_HELVETICA, FL_NORMAL_SIZE);
-    double width_for_80_columns_ = fl_width('W')*80;
+    double width_for_80_columns_ = fl_width('w') * 80;
     font_height_ = fl_height();
     int panel_height = font_height_ * 3;
 
@@ -202,7 +203,8 @@ public:
     ok->callback([](Fl_Widget *, void *x){
       std::vector<Panel*>* panels = static_cast<std::vector<Panel*>*>(x);
       for (Panel* a: *panels) {
-        std::cout << a->result() << std::endl;
+        std::string result = boost::replace_all_copy(a->result(), " ", "\\ ");
+        std::cout << result << std::endl;
       }
       exit(0);
       },static_cast<void*>(&panels_));
