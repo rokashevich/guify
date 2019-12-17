@@ -1,3 +1,5 @@
+#include <boost/algorithm/string/join.hpp>
+
 #include <algorithm>
 #include <functional>
 #include <iostream>
@@ -15,46 +17,6 @@
 #include <FL/Fl_Check_Button.H>
 #include <FL/Fl_Scroll.H>
 #include <FL/fl_draw.H>
-
-class Item {
-public:
-  virtual ~Item() {}
-  virtual std::string execute() = 0;
-};
-
-class ItemInput : public Item
-{
-public:
-  Fl_Box* description;
-  Fl_Input* field;
-  virtual std::string execute() { return std::string(field->value()); }
-};
-
-class ItemCheck : public Item
-{
-public:
-  Fl_Box* description;
-  Fl_Input* field;
-  virtual std::string execute() { return std::string(field->value()); }
-};
-
-class ItemRadio : public Item
-{
-public:
-  Fl_Box* description;
-  Fl_Input* field;
-  virtual std::string execute() { return std::string(field->value()); }
-};
-
-class HorizontalLine: public Fl_Widget {
-public:
-  HorizontalLine(int X, int Y, int W, int H) : Fl_Widget(X, Y, W, H) {}
-  void draw() {
-    fl_color(0,0,0);
-    fl_line_style(FL_SOLID, 1);
-    fl_line(0,150,300,150);
-  }
-};
 
 class Cfg {
 public:
@@ -159,7 +121,7 @@ public:
   Z(int y, int width, int height, std::string label,
     std::vector<std::string> options)
       : Panel(y, width, height, label) {
-    int number_of_options = options.size();
+    int number_of_options = static_cast<int>(options.size());
     int option_width = RemainingWidth() / number_of_options;
     int option_x_offset = TitleOffset();
     for(auto const& option: options) {
@@ -172,16 +134,16 @@ public:
     end();
   }
   std::string result() {
-    return "";
+    std::vector<std::string> chosen_values;
+    for (T* button: buttons) {
+      if (button->value()) {
+        chosen_values.push_back(button->label());
+      }
+    }
+    return boost::algorithm::join(chosen_values, " ");
   }
 private:
   std::vector<T*> buttons;
-};
-
-
-
-class Radio: Panel {
-public:
 };
 
 class Xxdialog {
@@ -216,25 +178,43 @@ public:
       if (key == "-I") {
         panel = new Input(cumulative_height, window_w, panel_height, panel_label);
       } else if (key == "-C") {
-        panel = new Z<Fl_Check_Button>(cumulative_height, window_w, panel_height, panel_label, options);
+        panel = new Z<Fl_Check_Button>(
+          cumulative_height, window_w, panel_height, panel_label, options);
       } else if (key == "-R") {
-        panel = new Z<Fl_Radio_Round_Button>(cumulative_height, window_w, panel_height, panel_label, options);
+        panel = new Z<Fl_Radio_Round_Button>(
+          cumulative_height, window_w, panel_height, panel_label, options);
       }
       if (panel) {
         scroll->add(panel);
-        panels.push_back(panel);
+        panels_.push_back(panel);
         cumulative_height += panel->Height();
       }
     }
 
+    // После всех паналей снизу окна программы рисуем кнопки OK и Cancel,
+    // каждая в пол-окна шириной.
     int ok_cancel_width = window_w / 2;
-    Fl_Return_Button* ok = new Fl_Return_Button(0,cumulative_height,ok_cancel_width,panel_height,"OK");
-    ok->color(0x66CC6600);
 
+    // Снизу-слева кнопка ОК.
+    Fl_Return_Button* ok = new Fl_Return_Button(0,cumulative_height,ok_cancel_width,panel_height,"OK");
+
+    // По кнопке OK построчно выводим значения панелей и выходим по exit(0).
+    ok->callback([](Fl_Widget *, void *x){
+      std::vector<Panel*>* panels = static_cast<std::vector<Panel*>*>(x);
+      for (Panel* a: *panels) {
+        std::cout << a->result() << std::endl;
+      }
+      exit(0);
+      },static_cast<void*>(&panels_));
+
+    // Снизу-справа кнопка Cancel.
     Fl_Button* cancel = new Fl_Button(ok_cancel_width,cumulative_height,ok_cancel_width,panel_height,"Cancel");
-    cancel->callback(+[](Fl_Widget *w, void *data){
+
+    // По кнопке Cancel программа просто выходит по exit(1).
+    cancel->callback([](Fl_Widget *, void *){
       exit(1);
-    });
+      });
+
     cumulative_height += panel_height;
 
     // Если суммарная высота всех панелей и кнопки меньше рассчитаной
@@ -269,7 +249,7 @@ private:
   std::string title_;
   std::vector<std::vector<std::string> > sentenses_;
   int font_height_;
-  std::vector<Panel*> panels;
+  std::vector<Panel*> panels_;
 };
 
 int usage() {
@@ -281,15 +261,6 @@ int usage() {
   return 1;
 }
 
-void ok_callback(Fl_Widget *w, void *data) {
-  std::vector<Item*> items = *reinterpret_cast<std::vector<Item*>*>(data);
-  for (Item* i : items) {
-    ItemInput* item = dynamic_cast<ItemInput*>(i);
-    std::cout << item->field->value() << std::endl;
-  }
-  exit(0);
-}
-
 int main(int argc, char **argv) {
   Cfg* cfg = new Cfg();
   if (!cfg->Init(argc, argv)) {
@@ -297,11 +268,4 @@ int main(int argc, char **argv) {
   }
   Xxdialog* xxdialog = new Xxdialog(cfg->title(), cfg->sentenses());
   return xxdialog->Run();
-
-
-
-
-
-  //ok->callback(ok_callback, &items);
-
 }
