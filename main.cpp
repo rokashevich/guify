@@ -84,16 +84,13 @@ public:
     this->align(FL_ALIGN_INSIDE|FL_ALIGN_LEFT);
     const int title_to_contents_width_ratio = 5; /// Для красоты.
     title_offset_ = static_cast<int>(w()/title_to_contents_width_ratio);
-    margin_ = height / 5;
     // Наследуя этот класс не забываем добавить end() в конце конструктора!
   }
   virtual std::string result() = 0;
   int Height() {return h();}
   int TitleOffset() {return title_offset_;}
   int RemainingWidth() {return w() - title_offset_;}
-  int Margin() {return margin_;}
 private:
-  int margin_;
   int title_offset_;
 };
 
@@ -103,9 +100,9 @@ public:
   Input(int y, int width, int height, std::string label)
     : Panel(y, width, height, label) {
     input_ = new Fl_Input(TitleOffset(),
-                          y+Margin(),
-                          width-TitleOffset()-2*Margin()-Fl::scrollbar_size(),
-                          Height()-2*Margin());
+                          y,
+                          width-TitleOffset()-Fl::scrollbar_size(),
+                          Height());
     end();
   }
   std::string result() {
