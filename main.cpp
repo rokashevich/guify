@@ -45,10 +45,10 @@ public:
       }
       else if (std::any_of(possible_args.begin(), possible_args.end(),
                            [=](std::string i){return i==arg;})) {
-        //std::cout << std::endl << "new sentence: ";
         std::vector<std::string> sentense = {arg};
         for (++i; i < argc; ++i) {
           arg = std::string(argv[i]);
+          std::cout << arg << std::endl;
           if (std::any_of(possible_args.begin(), possible_args.end(),
                           [=](std::string i){return i==arg;})) {
             --i;
@@ -72,8 +72,9 @@ public:
       options.erase(options.begin(), options.begin()+2);
       for (const std::string& option: options) {
         ++options_in_this_sentense;
-        if (option.length() > longest_option_name_.length())
+        if (option.length() > longest_option_name_.length()) {
           longest_option_name_ = option;
+        }
       }
       if (options_in_this_sentense > max_options_count_)
         max_options_count_ = options_in_this_sentense;
@@ -163,21 +164,25 @@ public:
     scroll->begin();
 
     int screen_num = 0;
-    Fl::screen_work_area(work_area_x_, work_area_y_, work_area_w_, work_area_h_, screen_num);
+    Fl::screen_work_area(work_area_x_, work_area_y_, work_area_w_, work_area_h_,
+                         screen_num);
 
     fl_font(FL_HELVETICA, FL_NORMAL_SIZE);
 
-    int u = fl_height();
-    int panel_height = u * 3;
+    int panel_height = fl_height() * 3;
+    int panel_name_width = static_cast<int>(
+          fl_width((cfg->LongestPanelName()).data())) + Fl::scrollbar_size();
+    std::cout << cfg->LongestOptionName() << std::endl;
+    int option_width = static_cast<int>(
+          fl_width(cfg->LongestOptionName().data())) * 2;
+    int contents_width = option_width * cfg->MaxOptinsCount() + Fl::scrollbar_size();
 
-    int panel_name_width = fl_width(cfg->LongestPanelName().data()) + u;
-    int option_width = fl_width(cfg->LongestOptionName().data()) + u + u;
-    int contents_width = option_width * cfg->MaxOptinsCount();
-
-    // Изначально ширину окна рассчитваем, чтобы был вмещал 80 символов,
-    // и в высоту чтобы сохранялась пропорциональность экрана.
+    // Ширину окна рассчитваем, чтобы влезали названия панелей и их содержимое.
+    // А высота окна чтобы была в 75% от доступной. В дальнейшем высота будет
+    // пересчитана в зависимости от суммарной высоты всех панелей, и, либо
+    // уменьшена, либо появится скрол.
     int window_w = panel_name_width + contents_width;
-    int window_h = window_w * work_area_h_ / work_area_w_;
+    int window_h = static_cast<int>(work_area_h_ * 0.75);
 
     int cumulative_height = 0;
     for (const std::vector<std::string>&sentense : cfg->Sentenses()) {
@@ -237,6 +242,7 @@ public:
 
     // Снизу-слева кнопка ОК.
     Fl_Return_Button* ok = new Fl_Return_Button(0,window_h-panel_height,ok_cancel_width,panel_height,"OK");
+    ok->color(0x99CC66FF);
 
     // По кнопке OK построчно выводим значения панелей и выходим по exit(0).
     ok->callback([](Fl_Widget *, void *x){
@@ -250,6 +256,7 @@ public:
 
     // Снизу-справа кнопка Cancel.
     Fl_Button* cancel = new Fl_Button(ok_cancel_width,window_h-panel_height,ok_cancel_width,panel_height,"Cancel");
+    cancel->color(0xFF6666FF);
 
     // По кнопке Cancel программа просто выходит по exit(1).
     cancel->callback([](Fl_Widget *, void *){
