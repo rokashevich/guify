@@ -48,7 +48,6 @@ public:
         std::vector<std::string> sentense = {arg};
         for (++i; i < argc; ++i) {
           arg = std::string(argv[i]);
-          std::cout << arg << std::endl;
           if (std::any_of(possible_args.begin(), possible_args.end(),
                           [=](std::string i){return i==arg;})) {
             --i;
@@ -172,7 +171,6 @@ public:
     int panel_height = fl_height() * 3;
     int panel_name_width = static_cast<int>(
           fl_width((cfg->LongestPanelName()).data())) + Fl::scrollbar_size();
-    std::cout << cfg->LongestOptionName() << std::endl;
     int option_width = static_cast<int>(
           fl_width(cfg->LongestOptionName().data())) * 2;
     int contents_width = option_width * cfg->MaxOptinsCount() + Fl::scrollbar_size();
