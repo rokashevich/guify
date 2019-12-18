@@ -243,14 +243,24 @@ public:
     ok->color(0x99CC66FF);
 
     // По кнопке OK построчно выводим значения панелей и выходим по exit(0).
-    ok->callback([](Fl_Widget *, void *x){
+    ok->callback([](Fl_Widget *, void *x) {
+
       std::vector<Panel*>* panels = static_cast<std::vector<Panel*>*>(x);
+      std::vector<std::string> results;
       for (Panel* a: *panels) {
         std::string result = boost::replace_all_copy(a->result(), " ", "\\ ");
-        std::cout << result << std::endl;
+        if (result.length() == 0) {
+          results.clear();
+          break;
+        }
+        results.push_back(result);
       }
-      exit(0);
-      },static_cast<void*>(&panels_));
+      if (results.size() > 0) {
+        std::string result = boost::algorithm::join(results, " ");
+        std::cout << result << std::endl;
+        exit(0);
+      }
+    },static_cast<void*>(&panels_));
 
     // Снизу-справа кнопка Cancel.
     Fl_Button* cancel = new Fl_Button(ok_cancel_width,window_h-panel_height,ok_cancel_width,panel_height,"Cancel");
