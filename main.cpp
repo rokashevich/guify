@@ -1,10 +1,10 @@
 #include <algorithm>
+#include <cstring>
 #include <functional>
 #include <iostream>
 #include <string>
-#include <cstring>
-#include <vector>
 #include <utility>
+#include <vector>
 
 #include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/replace.hpp>
@@ -96,13 +96,13 @@ private:
 };
 
 // Базовый класс панели.
-class Panel: public Fl_Group {
-public:
+class Panel : public Fl_Group {
+ public:
   Panel(int y, int width, int height, std::string title)
-    : Fl_Group(0,y,width,height) {
+      : Fl_Group(0, y, width, height) {
     this->copy_label(title.c_str());
     this->box(FL_THIN_UP_BOX);
-    this->align(FL_ALIGN_INSIDE|FL_ALIGN_LEFT);
+    this->align(FL_ALIGN_INSIDE | FL_ALIGN_LEFT);
     // Наследуя этот класс не забываем добавить end() в конце конструктора!
   }
   virtual std::string result() = 0;
@@ -113,10 +113,9 @@ class Input: public Panel {
 public:
   Input(int y, int panel_name_width, int width, int height, std::string label)
     : Panel(y, width, height, label) {
-    input_ = new Fl_Input(panel_name_width,
-                          y,
-                          width - panel_name_width - Fl::scrollbar_size(),
-                          Height());
+    input_ =
+        new Fl_Input(panel_name_width, y,
+                     width - panel_name_width - Fl::scrollbar_size(), Height());
     end();
   }
   std::string result() {
@@ -168,7 +167,7 @@ public:
 
     fl_font(FL_HELVETICA, FL_NORMAL_SIZE);
 
-    int panel_height = fl_height() * 3;
+    int panel_height = fl_height() * 2;
     int panel_name_width = static_cast<int>(
           fl_width((cfg->LongestPanelName()).data())) + Fl::scrollbar_size();
     int option_width = static_cast<int>(
