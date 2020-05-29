@@ -8,16 +8,18 @@
 
 #include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/replace.hpp>
+#include <boost/filesystem.hpp>
 
 #include <FL/Fl.H>
-#include <FL/Fl_Widget.H>
-#include <FL/Fl_Window.H>
 #include <FL/Fl_Box.H>
+#include <FL/Fl_Check_Button.H>
+#include <FL/Fl_File_Chooser.H>
 #include <FL/Fl_Input.H>
 #include <FL/Fl_Radio_Round_Button.H>
 #include <FL/Fl_Return_Button.H>
-#include <FL/Fl_Check_Button.H>
 #include <FL/Fl_Scroll.H>
+#include <FL/Fl_Widget.H>
+#include <FL/Fl_Window.H>
 #include <FL/fl_draw.H>
 
 // Назначение класса - распарсить аргументы командной строки.
@@ -30,7 +32,7 @@
 class Cfg {
 public:
   bool Init(int argc, char **argv) {
-    std::vector<std::string> possible_args = {"-T", "-I", "-C", "-R"};
+    std::vector<std::string> possible_args = {"-T", "-I", "-C", "-R", "-D"};
     for (int i = 1; i < argc; ++i) {
       std::string arg = std::string(argv[i]);
       if (arg == "-T") {
@@ -153,8 +155,46 @@ private:
   std::vector<T*> buttons;
 };
 
+class DirectoryChooser : public Panel {
+ public:
+  DirectoryChooser(int y, int panel_name_width, int width, int height,
+                   std::string label, const std::vector<std::string>& options)
+      : Panel(y, width, height, label) {
+    browse_button_ =
+        new Fl_Button(panel_name_width, y + fl_height() / 4,
+                      width - panel_name_width - Fl::scrollbar_size(),
+                      Height() - fl_height() / 2);
+    end();
+    this->result(options.at(0));
+    browse_button_->box(FL_BORDER_BOX);
+    browse_button_->color(FL_DARK1);
+    browse_button_->callback(
+        [](Fl_Widget*, void* x) {
+          DirectoryChooser* dc = static_cast<DirectoryChooser*>(x);
+          Fl_File_Chooser chooser(dc->result().data(), "*",
+                                  Fl_File_Chooser::DIRECTORY,
+                                  "Choose directory");
+          chooser.preview(0);
+          chooser.show();
+          while (chooser.shown()) Fl::wait();
+          if (chooser.value() == NULL) return;
+          dc->result(chooser.value());
+        },
+        this);
+  }
+  std::string result() { return chosen_directory_; }
+  void result(const std::string value) {
+    chosen_directory_ = value;
+    browse_button_->label(chosen_directory_.c_str());
+  }
+
+ private:
+  Fl_Button* browse_button_;
+  std::string chosen_directory_;
+};
+
 class Xxdialog {
-public:
+ public:
   Xxdialog(Cfg* cfg) {
     Fl_Window * window_ = new Fl_Window(0, 0, 0, 0, cfg->Title().data());
     Fl_Scroll * scroll = new Fl_Scroll(0, 0, 0, 0);
@@ -200,6 +240,10 @@ public:
         panel = new Z<Fl_Radio_Round_Button>(
               cumulative_height, panel_name_width, window_w, panel_height,
               panel_label, options, option_width);
+      } else if (key == "-D") {
+        panel =
+            new DirectoryChooser(cumulative_height, panel_name_width, window_w,
+                                 panel_height, panel_label, options);
       }
       if (panel) {
         scroll->add(panel);
@@ -239,7 +283,6 @@ public:
 
     // Снизу-слева кнопка ОК.
     Fl_Return_Button* ok = new Fl_Return_Button(0,window_h-panel_height,ok_cancel_width,panel_height,"OK");
-    ok->color(0x99CC66FF);
 
     // По кнопке OK построчно выводим значения панелей и выходим по exit(0).
     ok->callback([](Fl_Widget *, void *x) {
@@ -263,12 +306,9 @@ public:
 
     // Снизу-справа кнопка Cancel.
     Fl_Button* cancel = new Fl_Button(ok_cancel_width,window_h-panel_height,ok_cancel_width,panel_height,"Cancel");
-    cancel->color(0xFF6666FF);
 
     // По кнопке Cancel программа просто выходит по exit(1).
-    cancel->callback([](Fl_Widget *, void *){
-      exit(1);
-      });
+    cancel->callback([](Fl_Widget*, void*) { exit(1); });
 
     window_->show();
   }
