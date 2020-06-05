@@ -8,7 +8,6 @@
 
 #include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/replace.hpp>
-#include <boost/filesystem.hpp>
 
 #include <FL/Fl.H>
 #include <FL/Fl_Box.H>
@@ -111,13 +110,15 @@ class Panel : public Fl_Group {
   int Height() {return h();}
 };
 
-class Input: public Panel {
-public:
-  Input(int y, int panel_name_width, int width, int height, std::string label)
-    : Panel(y, width, height, label) {
+class Input : public Panel {
+ public:
+  Input(int y, int panel_name_width, int width, int height,
+        const std::string label, const std::string default_value)
+      : Panel(y, width, height, label) {
     input_ =
         new Fl_Input(panel_name_width, y,
                      width - panel_name_width - Fl::scrollbar_size(), Height());
+    input_->value(default_value.c_str());
     end();
   }
   std::string result() {
@@ -133,11 +134,13 @@ public:
   Z(int y, int panel_name_width, int width, int height, std::string label,
     std::vector<std::string> options, int option_width)
       : Panel(y, width, height, label) {
-    for(auto const& option: options) {
+    int value = 0;
+    for (auto const& option : options) {
       T* button = new T(
             panel_name_width, y, option_width, height);
       button->copy_label(option.c_str());
       panel_name_width += option_width;
+      button->value(!value++);
       buttons.push_back(button);
     }
     end();
@@ -146,7 +149,8 @@ public:
     std::vector<std::string> chosen_values;
     for (T* button: buttons) {
       if (button->value()) {
-        chosen_values.push_back(button->label());
+        const std::string value = button->label();
+        chosen_values.push_back(value);
       }
     }
     return boost::algorithm::join(chosen_values, " ");
@@ -210,8 +214,8 @@ class Xxdialog {
     int panel_height = fl_height() * 2;
     int panel_name_width = static_cast<int>(
           fl_width((cfg->LongestPanelName()).data())) + Fl::scrollbar_size();
-    int option_width = static_cast<int>(
-          fl_width(cfg->LongestOptionName().data())) * 2;
+    int option_width =
+        static_cast<int>(fl_width(cfg->LongestOptionName().data()));
     int contents_width = option_width * cfg->MaxOptinsCount() + Fl::scrollbar_size();
 
     // Ширину окна рассчитваем, чтобы влезали названия панелей и их содержимое.
@@ -231,7 +235,7 @@ class Xxdialog {
 
       if (key == "-I") {
         panel = new Input(cumulative_height, panel_name_width, window_w,
-              panel_height, panel_label);
+                          panel_height, panel_label, options.at(0));
       } else if (key == "-C") {
         panel = new Z<Fl_Check_Button>(
               cumulative_height, panel_name_width, window_w, panel_height,
@@ -290,7 +294,8 @@ class Xxdialog {
       std::vector<Panel*>* panels = static_cast<std::vector<Panel*>*>(x);
       std::vector<std::string> results;
       for (Panel* a: *panels) {
-        std::string result = boost::replace_all_copy(a->result(), " ", "\\ ");
+        const std::string result =
+            boost::replace_all_copy(a->result(), " ", "\\ ");
         if (result.length() == 0) {
           results.clear();
           break;
