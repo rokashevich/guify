@@ -209,7 +209,15 @@ class Xxdialog {
     Fl::screen_work_area(work_area_x_, work_area_y_, work_area_w_, work_area_h_,
                          screen_num);
 
-    fl_font(FL_HELVETICA, FL_NORMAL_SIZE);
+    // В fltk размер шрифта фиксирован.
+    // Масштабируем его в зависимости от dpi монитора.
+    // Дополнительно делаем шрифт в два раза больше нормального.
+    const int default_dpi = 72;
+    float h, v;  // v - dpi по вертикали - не понадобится.
+    Fl::screen_dpi(h, v);
+    FL_NORMAL_SIZE = h / default_dpi * FL_NORMAL_SIZE;
+
+    fl_font(FL_BOLD, FL_NORMAL_SIZE);
 
     int panel_height = fl_height() * 2;
     int panel_name_width = static_cast<int>(
@@ -333,6 +341,7 @@ int usage() {
   std::cerr << "    -I description" << std::endl;
   std::cerr << "    -C description checkboxes" << std::endl;
   std::cerr << "    -R description radiobuttons" << std::endl;
+  std::cerr << "    -D description directory" << std::endl;
   return 1;
 }
 
