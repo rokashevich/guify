@@ -80,7 +80,8 @@ public:
         max_options_count_ = options_in_this_sentense;
     }
 
-    return true;
+    return sentenses_.size() || longest_panel_name_.size() ||
+           longest_option_name_.size() || max_options_count_;
   }
   std::string Title() {return title_;}
   std::vector<std::vector<std::string> > Sentenses() {return sentenses_;}
@@ -336,19 +337,29 @@ private:
 };
 
 int usage() {
+  // Принцип использования скобок:
+  //   [для опциональных аргументов]
+  //   <для обязательный оругментов>
+  //   {для стандартных значений}
+  //   (прочее)
+
   std::cerr << "Usage:" << std::endl;
-  std::cerr << "    -T title" << std::endl;
-  std::cerr << "    -I description" << std::endl;
-  std::cerr << "    -C description checkboxes" << std::endl;
-  std::cerr << "    -R description radiobuttons" << std::endl;
-  std::cerr << "    -D description directory" << std::endl;
+  std::cerr << "    -T <title>" << std::endl;
+  std::cerr << "    -I <input name> [default value]" << std::endl;
+  std::cerr << "    -C <checkboxes name> <box 1 name> [other boxes]"
+            << std::endl;
+  std::cerr << "    -R <radio buttons name> <button 1 name> <button 2 name> "
+               "[other buttons]"
+            << std::endl;
+  std::cerr << "    -D <directory selector name> [initial directory]"
+            << std::endl;
   return 1;
 }
 
 int main(int argc, char **argv) {
   Cfg* cfg = new Cfg();
   if (!cfg->Init(argc, argv)) {
-    exit(1);
+    exit(usage());
   }
   Xxdialog* xxdialog = new Xxdialog(cfg);
   return xxdialog->Run();
