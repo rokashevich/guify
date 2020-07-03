@@ -73,6 +73,11 @@ public:
           sentense.push_back(std::string(initial_directory));
         }
       }
+      if (sentense.at(0) == "-I") {
+        if (sentense.size() == 2) {
+          sentense.push_back("");
+        }
+      }
     }
 
     for (const std::vector<std::string>& sentense : sentenses_) {
