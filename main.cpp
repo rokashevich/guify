@@ -6,6 +6,10 @@
 #include <utility>
 #include <vector>
 
+#include <pwd.h>
+#include <sys/types.h>
+#include <unistd.h>
+
 #include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/replace.hpp>
 
@@ -60,7 +64,18 @@ public:
       }
     }
 
-    for (const std::vector<std::string>&sentense : sentenses_) {
+    // Выставляем значения по умолчанию если не заданы.
+    for (std::vector<std::string>& sentense : sentenses_) {
+      if (sentense.at(0) == "-D") {
+        if (sentense.size() == 2) {
+          struct passwd* pw = getpwuid(getuid());
+          const char* initial_directory = pw->pw_dir;
+          sentense.push_back(std::string(initial_directory));
+        }
+      }
+    }
+
+    for (const std::vector<std::string>& sentense : sentenses_) {
       // Ищем самое длинное название панели.
       std::string label = sentense.at(1);
       if (label.length() > longest_panel_name_.length())
@@ -344,14 +359,14 @@ int usage() {
   //   (прочее)
 
   std::cerr << "Usage:" << std::endl;
-  std::cerr << "    -T <title>" << std::endl;
+  std::cerr << "    -T {title|xxdialog}" << std::endl;
   std::cerr << "    -I <input name> [default value]" << std::endl;
   std::cerr << "    -C <checkboxes name> <box 1 name> [other boxes]"
             << std::endl;
   std::cerr << "    -R <radio buttons name> <button 1 name> <button 2 name> "
                "[other buttons]"
             << std::endl;
-  std::cerr << "    -D <directory selector name> [initial directory]"
+  std::cerr << "    -D <directory selector name> {initial directory|~}"
             << std::endl;
   return 1;
 }
