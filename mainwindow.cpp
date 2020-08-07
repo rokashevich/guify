@@ -1,9 +1,6 @@
 #include "mainwindow.h"
 
-MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent)
-{
-}
+MainWindow::MainWindow(const Cfg &cfg, QWidget *parent) : QMainWindow(parent) {}
 
 MainWindow::~MainWindow()
 {

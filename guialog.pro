@@ -20,6 +20,7 @@ SOURCES += \
     mainwindow.cpp
 
 HEADERS += \
+    cfg.h \
     mainwindow.h
 
 # Default rules for deployment.
