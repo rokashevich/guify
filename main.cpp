@@ -14,7 +14,7 @@ int usage() {
   //   (прочее)
 
   std::cerr << "Usage:" << std::endl;
-  std::cerr << "    -T {title|xxdialog}" << std::endl;
+  std::cerr << "    -T <title>" << std::endl;
   std::cerr << "    -I <input name> [default value]" << std::endl;
   std::cerr << "    -C <checkboxes name> <box 1 name> [other boxes]"
             << std::endl;
@@ -23,6 +23,7 @@ int usage() {
             << std::endl;
   std::cerr << "    -D <directory selector name> {initial directory|~}"
             << std::endl;
+  std::cerr << "    -P <shell command to see running>" << std::endl;
   return 1;
 }
 
