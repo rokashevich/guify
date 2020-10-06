@@ -357,21 +357,18 @@ private:
 };
 
 int usage() {
-  // Принцип использования скобок:
-  //   [для опциональных аргументов]
-  //   <для обязательный оругментов>
-  //   {для стандартных значений}
-  //   (прочее)
-
-  std::cerr << "Usage:" << std::endl;
-  std::cerr << "    -T {title|xxdialog}" << std::endl;
-  std::cerr << "    -I <input name> [default value]" << std::endl;
-  std::cerr << "    -C <checkboxes name> <box 1 name> [other boxes]"
-            << std::endl;
-  std::cerr << "    -R <radio buttons name> <button 1 name> <button 2 name> "
-               "[other buttons]"
-            << std::endl;
-  std::cerr << "    -D <directory selector name> {initial directory|~}"
+  // Синтаксис справки по аргументам командной строки на основе:
+  // https://developers.google.com/style/code-syntax
+  std::cerr << R"(Usage:
+  fltkdialog [-T] { -P | [-I] [-C] [-R] [-D] [-F] }
+Key description:
+  -T Window Title; Without parameter window is borderless
+  -I var_name [initial string];
+  -C var_name option1 ...;
+  -R var_name option1 option2 ...; 
+  -D var_name [initial directory]; default=~
+  -F var_name [initial file]; default=empty
+  -P process_binary [arg1 ...])"
             << std::endl;
   return 1;
 }
