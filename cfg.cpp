@@ -5,7 +5,7 @@
 
 #include <algorithm>
 bool Cfg::Init(int argc, char** argv) {
-  std::vector<std::string> possible_args = {"-T", "-I", "-C", "-R", "-D"};
+  std::vector<std::string> possible_args = {"-T", "-I", "-C", "-R", "-D", "-P"};
   for (int i = 1; i < argc; ++i) {
     std::string arg = std::string(argv[i]);
     if (arg == "-T") {
