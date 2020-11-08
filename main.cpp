@@ -24,7 +24,7 @@
 #include <vector>
 
 #include "cfg.hpp"
-
+#include "unused.hpp"
 // Базовый класс панели.
 class Panel : public Fl_Group {
  public:
@@ -283,6 +283,7 @@ Key description:
 
 int main(int argc, char** argv) {
   auto handler = [](int i) {
+    unused(i);
     std::cout << "aborting" << std::endl;
     exit(0);
   };
