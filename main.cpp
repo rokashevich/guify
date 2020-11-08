@@ -287,10 +287,13 @@ int main(int argc, char** argv) {
     std::cout << "aborting" << std::endl;
     exit(0);
   };
-  signal(SIGINT, handler);   //^C
-  signal(SIGABRT, handler);  // abort()
-  signal(SIGTERM, handler);  // kill
-  signal(SIGTSTP, handler);  // ^Z
+  struct sigaction sa;
+  memset(&sa, 0, sizeof(sa));
+  sa.sa_handler = handler;
+  sigaction(SIGINT, &sa, NULL);   //^C
+  sigaction(SIGABRT, &sa, NULL);  // abort()
+  sigaction(SIGTERM, &sa, NULL);  // kill
+  sigaction(SIGTSTP, &sa, NULL);  // ^Z
 
   Cfg* cfg = new Cfg();
   if (!cfg->Init(argc, argv)) {
