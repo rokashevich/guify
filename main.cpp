@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/replace.hpp>
+#include <csignal>
 #include <cstring>
 #include <functional>
 #include <iostream>
@@ -280,12 +281,20 @@ Key description:
   return 1;
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
+  auto handler = [](int i) {
+    std::cout << "aborting" << std::endl;
+    exit(0);
+  };
+  signal(SIGINT, handler);   //^C
+  signal(SIGABRT, handler);  // abort()
+  signal(SIGTERM, handler);  // kill
+  signal(SIGTSTP, handler);  // ^Z
+
   Cfg* cfg = new Cfg();
   if (!cfg->Init(argc, argv)) {
     exit(usage());
   }
-  std::cout << "!!!" << cfg->Sentenses().at(0).at(0) << std::endl;
   if (cfg->Sentenses().at(0).at(0) == "-P") {
     Fl_Text_Display::Style_Table_Entry stable[] = {
         // FONT COLOR      FONT FACE   FONT SIZE
