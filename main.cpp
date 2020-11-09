@@ -314,9 +314,16 @@ int main(int argc, char** argv) {
 
   // Обработчик сигналов.
   auto handler = [](int i) {
-    unused(i);
-    std::cout << "sigusr" << std::endl;
-    exit(0);
+    switch (i) {
+      case SIGUSR1:
+        std::cout << "sigusr1" << std::endl;
+        break;
+      case SIGUSR2:
+        std::cout << "sigusr2" << std::endl;
+        break;
+      default:
+        break;
+    }
   };
   struct sigaction sa;
   memset(&sa, 0, sizeof(sa));
