@@ -10,6 +10,8 @@
 #include <FL/Fl_Widget.H>
 #include <FL/Fl_Window.H>
 #include <FL/fl_draw.H>
+#include <sys/ipc.h>
+#include <sys/shm.h>
 #include <sys/types.h>
 
 #include <algorithm>
@@ -282,18 +284,45 @@ Key description:
 }
 
 int main(int argc, char** argv) {
+  // Шареная память для синхронизации взаиморасположения на экране.
+  key_t key;
+  int shmid;
+  char* data;
+  const int SHM_SIZE = 1024;
+  if ((key = ftok("fltkdialog", 'X')) == -1) {
+    perror("ftok");
+    exit(1);
+  }
+  if ((shmid = shmget(key, SHM_SIZE, 0644 | IPC_CREAT)) == -1) {
+    perror("shmget");
+    exit(1);
+  }
+  data = (char*)shmat(shmid, (void*)0, 0);
+  if (data == (char*)(-1)) {
+    perror("shmat");
+    exit(1);
+  }
+  if (argc == 2) {
+    printf("writing to segment: \"%s\"\n", argv[1]);
+    strncpy(data, argv[1], SHM_SIZE);
+  } else
+    printf("segment contains: \"%s\"\n", data);
+  if (shmdt(data) == -1) {
+    perror("shmdt");
+    exit(1);
+  }
+
+  // Обработчик сигналов.
   auto handler = [](int i) {
     unused(i);
-    std::cout << "aborting" << std::endl;
+    std::cout << "sigusr" << std::endl;
     exit(0);
   };
   struct sigaction sa;
   memset(&sa, 0, sizeof(sa));
   sa.sa_handler = handler;
-  sigaction(SIGINT, &sa, NULL);   //^C
-  sigaction(SIGABRT, &sa, NULL);  // abort()
-  sigaction(SIGTERM, &sa, NULL);  // kill
-  sigaction(SIGTSTP, &sa, NULL);  // ^Z
+  sigaction(SIGUSR1, &sa, NULL);
+  sigaction(SIGUSR2, &sa, NULL);
 
   Cfg* cfg = new Cfg();
   if (!cfg->Init(argc, argv)) {
