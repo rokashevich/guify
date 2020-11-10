@@ -21,11 +21,14 @@
 #include <cstring>
 #include <functional>
 #include <iostream>
+#include <iterator>
+#include <regex>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include "cfg.hpp"
+#include "helpers.hpp"
 #include "unused.hpp"
 // Базовый класс панели.
 class Panel : public Fl_Group {
@@ -283,34 +286,40 @@ Key description:
   return 1;
 }
 
+std::vector<pid_t> pidof(std::string program_name) {
+  std::vector<pid_t> pids;
+  int pfds[2];
+  pipe(pfds);
+  if (!fork()) {
+    close(1);
+    dup(pfds[1]);
+    close(pfds[0]);
+    execlp("pidof", "pidof", program_name.data(), NULL);
+  } else {
+    close(0);
+    dup(pfds[0]);  // Получаем неотсортированную строку pid'ов вида:
+    close(pfds[1]);  // "1233 3242 5454 5677"
+    const std::string child_stdout{std::istreambuf_iterator<char>(std::cin),
+                                   std::istreambuf_iterator<char>()};
+    std::regex e("[0-9]+");
+    auto begin =
+        std::sregex_iterator(child_stdout.begin(), child_stdout.end(), e);
+    auto end = std::sregex_iterator();
+    for (auto it = begin; it != end; ++it) {
+      pids.push_back(std::stoi(it->str()));
+    }
+  }
+  return pids;
+}
+
 int main(int argc, char** argv) {
-  // Шареная память для синхронизации взаиморасположения на экране.
-  key_t key;
-  int shmid;
-  char* data;
-  const int SHM_SIZE = 1024;
-  if ((key = ftok("fltkdialog", 'X')) == -1) {
-    perror("ftok");
-    exit(1);
-  }
-  if ((shmid = shmget(key, SHM_SIZE, 0644 | IPC_CREAT)) == -1) {
-    perror("shmget");
-    exit(1);
-  }
-  data = (char*)shmat(shmid, (void*)0, 0);
-  if (data == (char*)(-1)) {
-    perror("shmat");
-    exit(1);
-  }
-  if (argc == 2) {
-    printf("writing to segment: \"%s\"\n", argv[1]);
-    strncpy(data, argv[1], SHM_SIZE);
-  } else
-    printf("segment contains: \"%s\"\n", data);
-  if (shmdt(data) == -1) {
-    perror("shmdt");
-    exit(1);
-  }
+  // Синхронизации взаиморасположения на экране.
+  const std::string program_name = strrchr(argv[0], '/') + 1;
+  const pid_t my_pid = getpid();
+  const std::vector<pid_t> all_pids = pidof(program_name);
+  o("program_name = " + program_name);
+  o("my_pid = " + std::to_string(my_pid));
+  o(all_pids, "all_pids = ");
 
   // Обработчик сигналов.
   auto handler = [](int i) {
