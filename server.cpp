@@ -8,8 +8,7 @@
 #include <cstring>
 #include <string>
 Server::Server(std::string program_name, pid_t current_pid)
-    : program_name_(program_name), current_pid_(current_pid) {}
-void Server::Start() {
+    : program_name_(program_name), current_pid_(current_pid) {
   int len;
   struct sockaddr_un local;
   const std::string sock_path =
@@ -51,7 +50,7 @@ void Server::Start() {
   pthread_create(&server_thread_id_, nullptr, server_thread_function,
                  &listen_socket_);
 }
-void Server::Stop() {
+Server::~Server() {
   pthread_cancel(server_thread_id_);
   pthread_join(server_thread_id_, nullptr);
 }

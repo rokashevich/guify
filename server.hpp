@@ -8,6 +8,5 @@ class Server {
 
  public:
   Server(std::string program_name, pid_t current_pid);
-  void Start();
-  void Stop();
+  ~Server();
 };

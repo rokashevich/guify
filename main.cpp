@@ -316,20 +316,21 @@ std::vector<pid_t> pidof(std::string program_name) {
   return pids;
 }
 
+int Reconfigure() { return 1; }
+
 int main(int argc, char** argv) {
   // Синхронизации взаиморасположения на экране.
-
-  // Получаем pidы всех инстансов.
   const std::string program_name = strrchr(argv[0], '/') + 1;
   const pid_t current_pid = getpid();
+
+  // Запускаем сервер.
+  Server server(program_name, current_pid);
+
+  // Получаем pidы всех инстансов.
   const std::vector<pid_t> all_pids = pidof(program_name);
   o("program_name = " + program_name);
   o("my_pid = " + std::to_string(current_pid));
   o(all_pids, "all_pids = ");
-
-  // Запускаем сервер.
-  Server server(program_name, current_pid);
-  server.Start();
 
   // Обработчик сигналов.
   auto handler = [](int i) {
@@ -388,8 +389,6 @@ int main(int argc, char** argv) {
     Xxdialog* xxdialog = new Xxdialog(cfg);
     gui_return_code = xxdialog->Run();
   }
-  std::cout << "STOPE" << std::endl;
-  server.Stop();
 
   return gui_return_code;
 }
