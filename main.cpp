@@ -315,8 +315,6 @@ std::vector<pid_t> pidof(std::string program_name) {
   return pids;
 }
 
-void* connection_handler(void* socket_desc) {}
-
 int main(int argc, char** argv) {
   // Синхронизации взаиморасположения на экране.
   // Получаем pidы всех инстансов.
