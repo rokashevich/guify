@@ -296,25 +296,6 @@ int main(int argc, char** argv) {
   // Запускаем сервер.
   Server server;
 
-  // Обработчик сигналов.
-  auto handler = [](int i) {
-    switch (i) {
-      case SIGUSR1:
-        std::cout << "sigusr1" << std::endl;
-        break;
-      case SIGUSR2:
-        std::cout << "sigusr2" << std::endl;
-        break;
-      default:
-        break;
-    }
-  };
-  struct sigaction sa;
-  memset(&sa, 0, sizeof(sa));
-  sa.sa_handler = handler;
-  sigaction(SIGUSR1, &sa, NULL);
-  sigaction(SIGUSR2, &sa, NULL);
-
   Cfg* cfg = new Cfg();
   if (!cfg->Init(argc, argv)) {
     exit(usage());
