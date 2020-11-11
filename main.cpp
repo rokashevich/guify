@@ -10,9 +10,12 @@
 #include <FL/Fl_Widget.H>
 #include <FL/Fl_Window.H>
 #include <FL/fl_draw.H>
+#include <pthread.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
+#include <sys/socket.h>
 #include <sys/types.h>
+#include <sys/un.h>
 
 #include <algorithm>
 #include <boost/algorithm/string/join.hpp>
@@ -312,14 +315,38 @@ std::vector<pid_t> pidof(std::string program_name) {
   return pids;
 }
 
+void* connection_handler(void* socket_desc) {}
+
 int main(int argc, char** argv) {
   // Синхронизации взаиморасположения на экране.
+  // Получаем pidы всех инстансов.
   const std::string program_name = strrchr(argv[0], '/') + 1;
   const pid_t my_pid = getpid();
   const std::vector<pid_t> all_pids = pidof(program_name);
+  char buf[1];
   o("program_name = " + program_name);
   o("my_pid = " + std::to_string(my_pid));
   o(all_pids, "all_pids = ");
+  // Запускаем сервер.
+  int s, s2, len;
+  unsigned t;
+  struct sockaddr_un local, remote;
+  const std::string sock_path = "/tmp/" + program_name + std::to_string(my_pid);
+  if ((s = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) e("socket");
+  local.sun_family = AF_UNIX;
+  std::strcpy(local.sun_path, sock_path.data());
+  unlink(local.sun_path);
+  len = strlen(local.sun_path) + sizeof(local.sun_family);
+  if (bind(s, (struct sockaddr*)&local, len) == -1) e("bind");
+  if (listen(s, 32) == -1) e("listen");
+  for (;;) {
+    t = sizeof(remote);
+    if ((s2 = accept(s, (struct sockaddr*)&remote, &t)) == -1) e("accept");
+    if (recv(s2, buf, sizeof(buf), 0) == 0) {
+      // Клиент отсоединился.
+    }
+    close(s2);
+  }
 
   // Обработчик сигналов.
   auto handler = [](int i) {
