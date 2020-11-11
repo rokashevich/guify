@@ -7,6 +7,6 @@ class Server {
   int listen_socket_;
 
  public:
-  Server(std::string program_name, pid_t current_pid);
+  Server();
   ~Server();
 };

@@ -5,10 +5,22 @@
 #include <sys/un.h>
 #include <unistd.h>
 
+#include <cassert>
 #include <cstring>
 #include <string>
-Server::Server(std::string program_name, pid_t current_pid)
-    : program_name_(program_name), current_pid_(current_pid) {
+
+#include "helpers.hpp"
+Server::Server() {
+  current_pid_ = getpid();
+  program_name_ = helpers::GetProgramNameByPid(current_pid_);
+  assert(program_name_ != "");
+
+  // Получаем pidы всех инстансов.
+  const std::vector<pid_t> all_pids = helpers::PidOf(program_name_);
+  helpers::MessageDebug("program_name_ = " + program_name_);
+  helpers::MessageDebug("current_pid_ = " + std::to_string(current_pid_));
+  helpers::MessageDebug(all_pids, "all_pids = ");
+
   int len;
   struct sockaddr_un local;
   const std::string sock_path =

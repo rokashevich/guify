@@ -290,47 +290,11 @@ Key description:
   return 1;
 }
 
-std::vector<pid_t> pidof(std::string program_name) {
-  std::vector<pid_t> pids;
-  int pfds[2];
-  pipe(pfds);
-  if (!fork()) {
-    close(1);
-    dup(pfds[1]);
-    close(pfds[0]);
-    execlp("pidof", "pidof", program_name.data(), NULL);
-  } else {
-    close(0);
-    dup(pfds[0]);  // Получаем неотсортированную строку pid'ов вида:
-    close(pfds[1]);  // "1233 3242 5454 5677"
-    const std::string child_stdout{std::istreambuf_iterator<char>(std::cin),
-                                   std::istreambuf_iterator<char>()};
-    std::regex e("[0-9]+");
-    auto begin =
-        std::sregex_iterator(child_stdout.begin(), child_stdout.end(), e);
-    auto end = std::sregex_iterator();
-    for (auto it = begin; it != end; ++it) {
-      pids.push_back(std::stoi(it->str()));
-    }
-  }
-  return pids;
-}
-
 int Reconfigure() { return 1; }
 
 int main(int argc, char** argv) {
-  // Синхронизации взаиморасположения на экране.
-  const std::string program_name = strrchr(argv[0], '/') + 1;
-  const pid_t current_pid = getpid();
-
   // Запускаем сервер.
-  Server server(program_name, current_pid);
-
-  // Получаем pidы всех инстансов.
-  const std::vector<pid_t> all_pids = pidof(program_name);
-  o("program_name = " + program_name);
-  o("my_pid = " + std::to_string(current_pid));
-  o(all_pids, "all_pids = ");
+  Server server;
 
   // Обработчик сигналов.
   auto handler = [](int i) {
