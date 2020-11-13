@@ -10,7 +10,6 @@
 #include <FL/Fl_Widget.H>
 #include <FL/Fl_Window.H>
 #include <FL/fl_draw.H>
-#include <pthread.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <sys/socket.h>

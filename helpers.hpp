@@ -23,6 +23,19 @@ void MessageDebug(const std::vector<T>& vector, std::string prefix = "",
   std::cout << std::endl;
 }
 
+// Удаление элемента map по предикату.
+// Появится в C++20.
+// https://stackoverflow.com/questions/800955/remove-if-equivalent-for-stdmap
+// template <typename ContainerT, typename PredicateT>
+// void erase_if(ContainerT& items, const PredicateT& predicate) {
+//  for (auto it = items.begin(); it != items.end();) {
+//    if (predicate(*it))
+//      it = items.erase(it);
+//    else
+//      ++it;
+//  }
+//}
+
 inline void MessageError(std::string exit_message) {
   perror(exit_message.data());
   exit(1);
@@ -47,7 +60,7 @@ inline std::string GetProgramNameByPid(pid_t pid) {
 }
 
 // Вызывает системную утилиту pidof с аргументом program_name и возвращает её
-// вывод.
+// вывод в виде отсортированного вектора.
 inline std::vector<pid_t> PidOf(std::string program_name) {
   std::vector<pid_t> pids;
   int pfds[2];
@@ -71,6 +84,7 @@ inline std::vector<pid_t> PidOf(std::string program_name) {
       pids.push_back(std::stoi(it->str()));
     }
   }
+  std::sort(pids.begin(), pids.end());
   return pids;
 }
 
