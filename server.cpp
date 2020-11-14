@@ -53,23 +53,29 @@ void Server::StartListener() {
     return;
   }
   auto server_thread_function = [](void* parameter) -> void* {
-    int* s = (int*)parameter;
-    int s2;
-    unsigned t;
-    char buf[1];
-    struct sockaddr_un remote;
-    for (;;) {
-      t = sizeof(remote);
-      if ((s2 = accept(*s, (struct sockaddr*)&remote, &t)) == -1) {
+    while (true) {
+      int* s = (int*)parameter;
+      int listener_socker;
+      struct sockaddr_un remote;
+      unsigned t = sizeof(remote);
+      if ((listener_socker = accept(*s, (struct sockaddr*)&remote, &t)) == -1) {
         std::cerr << "accept" << std::endl;
+        continue;
+      }
+      auto recv_thread_function = [](void* parameter) -> void* {
+        int s = *(int*)parameter;
+        std::cout << "someone connected " << s << std::endl;
+        char buf[1];
+        recv(s, buf, sizeof(buf), 0);
+        close(s);
+        std::cout << "someone disconnected " << s << std::endl;
         return nullptr;
-      }
-      if (recv(s2, buf, sizeof(buf), 0) == 0) {
-        std::cout << "client disconnected" << std::endl;
-        // Клиент отсоединился.
-      }
-      close(s2);
+      };
+      pthread_t listener_thread_id;
+      pthread_create(&listener_thread_id, nullptr, recv_thread_function,
+                     &listener_socker);
     }
+    return nullptr;
   };
   pthread_create(&server_thread_id_, nullptr, server_thread_function,
                  &listen_socket_);
