@@ -31,7 +31,7 @@
 
 #include "cfg.hpp"
 #include "helpers.hpp"
-#include "server.hpp"
+#include "swarm.hpp"
 #include "unused.hpp"
 // Базовый класс панели.
 class Panel : public Fl_Group {
@@ -293,7 +293,7 @@ int Reconfigure() { return 1; }
 
 int main(int argc, char** argv) {
   // Запускаем сервер.
-  Server server;
+  Swarm swarm;
 
   Cfg* cfg = new Cfg();
   if (!cfg->Init(argc, argv)) {

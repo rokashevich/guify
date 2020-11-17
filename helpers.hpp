@@ -26,15 +26,15 @@ void MessageDebug(const std::vector<T>& vector, std::string prefix = "",
 // Удаление элемента map по предикату.
 // Появится в C++20.
 // https://stackoverflow.com/questions/800955/remove-if-equivalent-for-stdmap
-// template <typename ContainerT, typename PredicateT>
-// void erase_if(ContainerT& items, const PredicateT& predicate) {
-//  for (auto it = items.begin(); it != items.end();) {
-//    if (predicate(*it))
-//      it = items.erase(it);
-//    else
-//      ++it;
-//  }
-//}
+template <typename ContainerT, typename PredicateT>
+void erase_if(ContainerT& items, const PredicateT& predicate) {
+  for (auto it = items.begin(); it != items.end();) {
+    if (predicate(*it))
+      it = items.erase(it);
+    else
+      ++it;
+  }
+}
 
 inline void MessageError(std::string exit_message) {
   perror(exit_message.data());
