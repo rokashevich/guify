@@ -23,23 +23,22 @@ Swarm::Swarm()
 Swarm::~Swarm() { pthread_cancel(server_thread_id_); }
 
 void Swarm::RunServer() {
-  int len;
-  struct sockaddr_un local;
-  const std::string sock_path =
-      "/tmp/" + program_name_ + "_" + std::to_string(program_pid_);
-  if ((listen_socket_ = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
+  const std::string sock_path = SockPath(program_pid_);
+  int listen_socket;
+  if ((listen_socket = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
     std::cerr << "socket" << std::endl;
     return;
   }
+  struct sockaddr_un local;
   local.sun_family = AF_UNIX;
   std::strcpy(local.sun_path, sock_path.data());
   unlink(local.sun_path);
-  len = strlen(local.sun_path) + sizeof(local.sun_family);
-  if (bind(listen_socket_, (struct sockaddr*)&local, len) == -1) {
+  int len = strlen(local.sun_path) + sizeof(local.sun_family);
+  if (bind(listen_socket, (struct sockaddr*)&local, len) == -1) {
     std::cerr << "bind" << std::endl;
     return;
   }
-  if (listen(listen_socket_, 32) == -1) {
+  if (listen(listen_socket, 32) == -1) {
     std::cerr << "listen" << std::endl;
     return;
   }
@@ -69,7 +68,7 @@ void Swarm::RunServer() {
     return nullptr;
   };
   pthread_create(&server_thread_id_, nullptr, server_thread_function,
-                 &listen_socket_);
+                 &listen_socket);
   pthread_detach(server_thread_id_);
 }
 
