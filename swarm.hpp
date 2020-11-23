@@ -1,5 +1,6 @@
 #pragma once
 #include <pthread.h>
+#include <semaphore.h>
 
 #include <iostream>
 #include <map>
@@ -9,14 +10,27 @@
 class Swarm {
   const pid_t program_pid_;
   const std::string program_name_;
+  sem_t semaphore_;
+  int server_socket_;
   std::vector<pid_t> instances_pids_;
-  std::map<pid_t, std::tuple<pthread_t, std::string>> connections_;
+
+  void RunServer();  // Сервер, к которому будут коннектиться другие инстансы.
   pthread_t server_thread_id_;
-  void RunServer();  // Сервер, к которому будут коннектиться чужие клиенты.
-  void SetupConnections();
+
+  void Reconnect();
+  std::map<pid_t, std::tuple<pthread_t, std::string>> connections_;
+
+  std::tuple<sem_t, void (*)(std::pair<int, int>)>
+      reconnecter_notifier_parameters_;
+  void RunClient();
+
   std::string SockPath(pid_t pid);
+  Swarm();
 
  public:
-  Swarm();
+  void Start();
+  void Stop();
+  sem_t* Semaphore();
+  static Swarm& Singleton();
   ~Swarm();
 };

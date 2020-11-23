@@ -293,7 +293,8 @@ int Reconfigure() { return 1; }
 
 int main(int argc, char** argv) {
   // Запускаем сервер.
-  Swarm swarm;
+  Swarm swarm = Swarm::Singleton();
+  swarm.Start();
 
   Cfg* cfg = new Cfg();
   if (!cfg->Init(argc, argv)) {

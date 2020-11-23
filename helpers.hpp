@@ -1,4 +1,5 @@
 #pragma once
+#include <sys/wait.h>
 #include <unistd.h>
 
 #include <fstream>
@@ -64,26 +65,42 @@ inline std::string GetProgramNameByPid(pid_t pid) {
 inline std::vector<pid_t> PidOf(std::string program_name) {
   std::vector<pid_t> pids;
   int pfds[2];
-  pipe(pfds);
-  if (!fork()) {
-    close(1);
-    dup(pfds[1]);
-    close(pfds[0]);
-    execlp("pidof", "pidof", program_name.data(), NULL);
-  } else {
-    close(0);
-    dup(pfds[0]);  // Получаем неотсортированную строку pid'ов вида:
-    close(pfds[1]);  // "1233 3242 5454 5677"
-    const std::string child_stdout{std::istreambuf_iterator<char>(std::cin),
-                                   std::istreambuf_iterator<char>()};
-    std::regex e("[0-9]+");
-    auto begin =
-        std::sregex_iterator(child_stdout.begin(), child_stdout.end(), e);
-    auto end = std::sregex_iterator();
-    for (auto it = begin; it != end; ++it) {
-      pids.push_back(std::stoi(it->str()));
-    }
+  if (pipe(pfds) == -1) {
+    std::cerr << "pipe" << std::endl;
+    return {};
   }
+  if (!fork()) {
+    // close(1);
+    dup2(pfds[1], 1);
+    close(pfds[0]);
+    std::string child_pid = std::to_string(getpid());
+    execlp("pidof", "pidof", "-o", child_pid.data(), program_name.data(), NULL);
+    std::cerr << "execlp" << std::endl;
+  }
+  close(pfds[1]);  // Закрывает stdin (1).
+  // close(0);        // Закрываем нормальный stdin.
+  dup2(pfds[0], 0);  // stdout (1) -> stdin (pfds[0])
+  char arr[1000];
+  read(pfds[0], arr, sizeof(arr));
+  close(pfds[0]);
+  char* n = strchr(arr, '\n');
+  *n = 0;
+  const std::string child_stdout(arr);
+
+  // std::cout << ">>" << child_stdout << std::endl;
+  //    std::cin.clear();
+  //  const std::string child_stdout{std::istreambuf_iterator<char>(std::cin),
+  //                                 std::istreambuf_iterator<char>()};
+  std::cout << "!!!" << child_stdout << "???" << std::endl;
+  std::regex e("[0-9]+");
+  auto begin =
+      std::sregex_iterator(child_stdout.begin(), child_stdout.end(), e);
+  auto end = std::sregex_iterator();
+  for (auto it = begin; it != end; ++it) {
+    pids.push_back(std::stoi(it->str()));
+  }
+  // wait(nullptr);
+
   std::sort(pids.begin(), pids.end());
   return pids;
 }

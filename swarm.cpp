@@ -12,20 +12,20 @@
 #include <string>
 
 #include "helpers.hpp"
-
 Swarm::Swarm()
     : program_pid_(getpid()),
       program_name_(helpers::GetProgramNameByPid(program_pid_)) {
-  RunServer();
-  SetupConnections();
+  sem_init(&semaphore_, 0, 1);
 }
-
-Swarm::~Swarm() { pthread_cancel(server_thread_id_); }
-
+Swarm::~Swarm() { Stop(); }
+void Swarm::Stop() { pthread_cancel(server_thread_id_); }
+Swarm& Swarm::Singleton() {
+  static Swarm* singleton = new Swarm();
+  return *singleton;
+}
 void Swarm::RunServer() {
   const std::string sock_path = SockPath(program_pid_);
-  int listen_socket;
-  if ((listen_socket = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
+  if ((server_socket_ = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
     std::cerr << "socket" << std::endl;
     return;
   }
@@ -34,11 +34,11 @@ void Swarm::RunServer() {
   std::strcpy(local.sun_path, sock_path.data());
   unlink(local.sun_path);
   int len = strlen(local.sun_path) + sizeof(local.sun_family);
-  if (bind(listen_socket, (struct sockaddr*)&local, len) == -1) {
+  if (bind(server_socket_, (struct sockaddr*)&local, len) == -1) {
     std::cerr << "bind" << std::endl;
     return;
   }
-  if (listen(listen_socket, 32) == -1) {
+  if (listen(server_socket_, 32) == -1) {
     std::cerr << "listen" << std::endl;
     return;
   }
@@ -49,16 +49,18 @@ void Swarm::RunServer() {
       struct sockaddr_un remote;
       unsigned t = sizeof(remote);
       if ((listener_socker = accept(*s, (struct sockaddr*)&remote, &t)) == -1) {
-        std::cerr << "accept" << std::endl;
+        std::cerr << "accept!" << std::endl;
         continue;
       }
       auto recv_thread_function = [](void* parameter) -> void* {
         int s = *(int*)parameter;
         std::cout << "someone connected " << s << std::endl;
+        sem_post(Swarm::Singleton().Semaphore());
         char buf[1];
         recv(s, buf, sizeof(buf), 0);
         close(s);
         std::cout << "someone disconnected " << s << std::endl;
+        sem_post(Swarm::Singleton().Semaphore());
         return nullptr;
       };
       pthread_t listener_thread_id;
@@ -68,14 +70,19 @@ void Swarm::RunServer() {
     return nullptr;
   };
   pthread_create(&server_thread_id_, nullptr, server_thread_function,
-                 &listen_socket);
+                 &server_socket_);
   pthread_detach(server_thread_id_);
 }
 
-void Swarm::SetupConnections() {
+void Swarm::Reconnect() {
   // Получаем обновлённый список PIDов всех инстансов программы.
   instances_pids_ = helpers::PidOf(program_name_);
-
+  helpers::MessageDebug(instances_pids_, "instances_pids_=");
+  //  instances_pids_ = helpers::PidOf(program_name_);
+  //  helpers::MessageDebug(instances_pids_, "2 instances_pids_=");
+  //  instances_pids_ = helpers::PidOf(program_name_);
+  //  helpers::MessageDebug(instances_pids_, "3 instances_pids_=");
+  // exit(0);
   // Удаляем соединения к PIDам, которые отсутствуют в обновлённом списке.
   helpers::erase_if(
       connections_,
@@ -131,7 +138,25 @@ void Swarm::SetupConnections() {
     }
   }
 }
-
 std::string Swarm::SockPath(pid_t pid) {
   return "/tmp/" + program_name_ + "_" + std::to_string(pid);
+}
+void Swarm::RunClient() {
+  auto thread_function = [](void*) -> void* {
+    sem_t* semaphore = Swarm::Singleton().Semaphore();
+    while (true) {
+      sem_wait(semaphore);
+      // sleep(1);
+      std::cout << "UPDATE" << std::endl;
+      Swarm::Singleton().Reconnect();
+    }
+  };
+  pthread_t thread_id;
+  pthread_create(&thread_id, nullptr, thread_function, nullptr);
+  pthread_detach(server_thread_id_);
+}
+sem_t* Swarm::Semaphore() { return &semaphore_; };
+void Swarm::Start() {
+  RunServer();
+  RunClient();
 }
