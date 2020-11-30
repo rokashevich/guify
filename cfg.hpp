@@ -13,6 +13,12 @@
 
 class Cfg
 {
+  std::string title_{"xxdialog"};
+  std::vector<std::vector<std::string> > sentenses_;
+  std::string longest_panel_name_;  // Самое длинное название панели.
+  std::string longest_option_name_{""};  // Самый длинный ваирант.
+  int max_options_count_{0};  // Наибольшее кол-во вариантов в одной панели.
+
  public:
   bool Init(int argc, char** argv);
   std::string Title() { return title_; }
@@ -20,11 +26,4 @@ class Cfg
   std::string LongestPanelName() { return longest_panel_name_; }
   std::string LongestOptionName() { return longest_option_name_; }
   int MaxOptinsCount() { return max_options_count_; }
-
- private:
-  std::string title_{"xxdialog"};
-  std::vector<std::vector<std::string> > sentenses_;
-  std::string longest_panel_name_;  // Самое длинное название панели.
-  std::string longest_option_name_{""};  // Самый длинный ваирант.
-  int max_options_count_{0};  // Наибольшее кол-во вариантов в одной панели.
 };

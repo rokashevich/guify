@@ -2,6 +2,7 @@
 #include <pthread.h>
 #include <semaphore.h>
 
+#include <functional>
 #include <iostream>
 #include <map>
 #include <set>
@@ -28,7 +29,7 @@ class Swarm {
   Swarm();
 
  public:
-  void Start();
+  void Start(std::function<void(int, int)> fun);
   void Stop();
   sem_t* Semaphore();
   static Swarm& Singleton();

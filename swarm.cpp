@@ -156,7 +156,8 @@ void Swarm::RunClient() {
   pthread_detach(server_thread_id_);
 }
 sem_t* Swarm::Semaphore() { return &semaphore_; };
-void Swarm::Start() {
+void Swarm::Start(std::function<void(int, int)> fun) {
+  fun(666, 1488);
   RunServer();
   RunClient();
 }
