@@ -15,6 +15,7 @@
 Swarm::Swarm()
     : program_pid_(getpid()),
       program_name_(helpers::GetProgramNameByPid(program_pid_)) {
+  std::cout << "CONSTRUCTOR" << std::endl;
   sem_init(&semaphore_, 0, 1);
 }
 Swarm::~Swarm() { Stop(); }
@@ -143,12 +144,14 @@ std::string Swarm::SockPath(pid_t pid) {
 }
 void Swarm::RunClient() {
   auto thread_function = [](void*) -> void* {
-    sem_t* semaphore = Swarm::Singleton().Semaphore();
+    Swarm& swarm = Swarm::Singleton();
+    sem_t* semaphore = swarm.Semaphore();
     while (true) {
       sem_wait(semaphore);
       // sleep(1);
       std::cout << "UPDATE" << std::endl;
-      Swarm::Singleton().Reconnect();
+      swarm.Reconnect();
+      swarm.Callback(444, 333);
     }
   };
   pthread_t thread_id;
@@ -156,8 +159,11 @@ void Swarm::RunClient() {
   pthread_detach(server_thread_id_);
 }
 sem_t* Swarm::Semaphore() { return &semaphore_; };
-void Swarm::Start(std::function<void(int, int)> fun) {
-  fun(666, 1488);
+void Swarm::Start(std::function<void(int, int)> callback) {
+  callback_ = callback;
   RunServer();
   RunClient();
+}
+void Swarm::Callback(int num_instances, int own_num) {
+  callback_(num_instances, own_num);
 }

@@ -60,7 +60,7 @@ int main(int argc, char** argv) {
   }
   Fl::lock();  // https://www.fltk.org/doc-1.3/advanced.html
   Gui* gui = new Gui(cfg);
-  Swarm swarm = Swarm::Singleton();
+  Swarm& swarm = Swarm::Singleton();
   swarm.Start(std::bind(&Gui::NumInstancesChanged, gui, std::placeholders::_1,
                         std::placeholders::_2));
   return gui->Run();
