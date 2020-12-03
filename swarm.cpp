@@ -148,9 +148,8 @@ void Swarm::RunClient() {
     sem_t* semaphore = swarm.Semaphore();
     while (true) {
       sem_wait(semaphore);
-      // sleep(1);
-      std::cout << "UPDATE" << std::endl;
       swarm.Reconnect();
+
       swarm.Callback(444, 333);
     }
   };
@@ -167,3 +166,5 @@ void Swarm::Start(std::function<void(int, int)> callback) {
 void Swarm::Callback(int num_instances, int own_num) {
   callback_(num_instances, own_num);
 }
+
+std::tuple<int, int> Swarm::Order() { return std::make_tuple<int, int>(1, 1); }

@@ -270,6 +270,7 @@ class Gui {
     window_->resizable(*disp);
   }
   Gui(Cfg* cfg) {
+    cfg_ = cfg;
     window_ = new Fl_Window(10, 10, 640, 480, cfg->Title().data());
     Fl::screen_work_area(work_area_x_, work_area_y_, work_area_w_, work_area_h_,
                          0);
@@ -283,8 +284,5 @@ class Gui {
 
   int Run() { return Fl::run(); }
 
-  void NumInstancesChanged(int num_instances, int own_num) {
-    std::cout << "NumInstancesChanged " << num_instances << " " << own_num
-              << std::endl;
-  }
+  void NumInstancesChanged(int num_instances, int own_num) {}
 };

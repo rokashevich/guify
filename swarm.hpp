@@ -36,4 +36,5 @@ class Swarm {
   sem_t* Semaphore();
   static Swarm& Singleton();
   ~Swarm();
+  std::tuple<int, int> Order();
 };

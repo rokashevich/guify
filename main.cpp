@@ -51,8 +51,6 @@ Key description:
   return 1;
 }
 
-int Reconfigure() { return 1; }
-
 int main(int argc, char** argv) {
   Cfg* cfg = new Cfg();
   if (!cfg->Init(argc, argv)) {
