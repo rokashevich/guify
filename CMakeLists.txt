@@ -1,8 +1,13 @@
-# Установка всех необходимых зависимостей в kde neon (18.04):
-# apt install libfltk1.3-dev fluid libboost-all-dev libsm-dev libxinerama-dev libxcursor-dev libxft-dev libcairo2-dev
-CMAKE_MINIMUM_REQUIRED(VERSION 3.5.1)
-SET (CMAKE_CXX_STANDARD 11)
-PROJECT(fltkdialog)
-FIND_PACKAGE(FLTK REQUIRED)
-ADD_EXECUTABLE(fltkdialog main.cpp cfg.cpp helpers.hpp gui.cpp swarm.cpp swarm.hpp)
-TARGET_LINK_LIBRARIES(fltkdialog fltk_STATIC)
+cmake_minimum_required(VERSION 3.5)
+project(guialog LANGUAGES CXX)
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+set(CMAKE_AUTOUIC ON)
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets REQUIRED)
+find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets REQUIRED)
+add_executable(guialog main.cpp cfg.cpp helpers.hpp gui.cpp swarm.cpp swarm.hpp)
+target_link_libraries(guialog PRIVATE Qt${QT_VERSION_MAJOR}::Widgets pthread)
+

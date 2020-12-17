@@ -1,15 +1,3 @@
-#include <FL/Fl.H>
-#include <FL/Fl_Box.H>
-#include <FL/Fl_Check_Button.H>
-#include <FL/Fl_File_Chooser.H>
-#include <FL/Fl_Input.H>
-#include <FL/Fl_Radio_Round_Button.H>
-#include <FL/Fl_Return_Button.H>
-#include <FL/Fl_Scroll.H>
-#include <FL/Fl_Text_Display.H>
-#include <FL/Fl_Widget.H>
-#include <FL/Fl_Window.H>
-#include <FL/fl_draw.H>
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <sys/socket.h>
@@ -17,8 +5,6 @@
 #include <sys/un.h>
 
 #include <algorithm>
-#include <boost/algorithm/string/join.hpp>
-#include <boost/algorithm/string/replace.hpp>
 #include <csignal>
 #include <cstring>
 #include <functional>
@@ -56,10 +42,10 @@ int main(int argc, char** argv) {
   if (!cfg->Init(argc, argv)) {
     exit(usage());
   }
-  Fl::lock();  // https://www.fltk.org/doc-1.3/advanced.html
   Gui* gui = new Gui(cfg);
   Swarm& swarm = Swarm::Singleton();
   swarm.Start(std::bind(&Gui::NumInstancesChanged, gui, std::placeholders::_1,
                         std::placeholders::_2));
-  return gui->Run();
+  return 0;
+  //  return gui->Run();
 }
