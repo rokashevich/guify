@@ -42,10 +42,9 @@ int main(int argc, char** argv) {
   if (!cfg->Init(argc, argv)) {
     exit(usage());
   }
-  Gui* gui = new Gui(cfg);
+  Gui* gui = new Gui(argc, argv, cfg);
   Swarm& swarm = Swarm::Singleton();
   swarm.Start(std::bind(&Gui::NumInstancesChanged, gui, std::placeholders::_1,
                         std::placeholders::_2));
-  return 0;
-  //  return gui->Run();
+  return gui->Run();
 }

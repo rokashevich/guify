@@ -5,9 +5,10 @@
 
 #include <algorithm>
 bool Cfg::Init(int argc, char** argv) {
+  type_ = Type::kDialog;
   std::vector<std::string> possible_args = {"-T", "-I", "-C", "-R", "-D", "-P"};
   for (int i = 1; i < argc; ++i) {
-    std::string arg = std::string(argv[i]);
+    QString arg = QString(argv[i]);
     if (arg == "-T") {
       if (argc > i + 1 &&
           !std::any_of(possible_args.begin(), possible_args.end(),
@@ -18,12 +19,16 @@ bool Cfg::Init(int argc, char** argv) {
         return false;
       }
     } else if (std::any_of(possible_args.begin(), possible_args.end(),
-                           [=](std::string i) { return i == arg; })) {
-      std::vector<std::string> sentense = {arg};
+                           [=](std::string s) {
+                             return QString::fromStdString(s) == arg;
+                           })) {
+      QStringList sentense = {arg};
       for (++i; i < argc; ++i) {
-        arg = std::string(argv[i]);
+        arg = QString(argv[i]);
         if (std::any_of(possible_args.begin(), possible_args.end(),
-                        [=](std::string i) { return i == arg; })) {
+                        [=](std::string s) {
+                          return QString::fromStdString(s) == arg;
+                        })) {
           --i;
           break;
         }
@@ -34,12 +39,12 @@ bool Cfg::Init(int argc, char** argv) {
   }
 
   // Выставляем значения по умолчанию если не заданы.
-  for (std::vector<std::string>& sentense : sentenses_) {
+  for (auto& sentense : sentenses_) {
     if (sentense.at(0) == "-D") {
       if (sentense.size() == 2) {
         struct passwd* pw = getpwuid(getuid());
-        const char* initial_directory = pw->pw_dir;
-        sentense.push_back(std::string(initial_directory));
+        QString initial_directory = pw->pw_dir;
+        sentense.push_back(initial_directory);
       }
     }
     if (sentense.at(0) == "-I") {
@@ -49,26 +54,5 @@ bool Cfg::Init(int argc, char** argv) {
     }
   }
 
-  for (const std::vector<std::string>& sentense : sentenses_) {
-    // Ищем самое длинное название панели.
-    std::string label = sentense.at(1);
-    if (label.length() > longest_panel_name_.length())
-      longest_panel_name_ = label;
-
-    // Ищем самый длинный вариант и набольшее кол-во вариантов.
-    int options_in_this_sentense = 0;
-    std::vector<std::string> options = sentense;
-    options.erase(options.begin(), options.begin() + 2);
-    for (const std::string& option : options) {
-      ++options_in_this_sentense;
-      if (option.length() > longest_option_name_.length()) {
-        longest_option_name_ = option;
-      }
-    }
-    if (options_in_this_sentense > max_options_count_)
-      max_options_count_ = options_in_this_sentense;
-  }
-
-  return sentenses_.size() || longest_panel_name_.size() ||
-         longest_option_name_.size() || max_options_count_;
+  return sentenses_.size();
 }

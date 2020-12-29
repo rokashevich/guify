@@ -8,22 +8,23 @@
 //   - наибольшее кол-во вариантов в панели.
 // Эти поля будут нужны для красивой компоновки виджетов в классе Xxdialog.
 
+#include <QList>
+#include <QStringList>
 #include <iostream>
 #include <vector>
 
-class Cfg
-{
+class Cfg {
+ public:
+  enum class Type { kDialog, kProcess, kProgress, kOSD };
+
+ private:
   std::string title_{"xxdialog"};
-  std::vector<std::vector<std::string> > sentenses_;
-  std::string longest_panel_name_;  // Самое длинное название панели.
-  std::string longest_option_name_{""};  // Самый длинный ваирант.
-  int max_options_count_{0};  // Наибольшее кол-во вариантов в одной панели.
+  QList<QStringList> sentenses_;
+  Type type_;
 
  public:
   bool Init(int argc, char** argv);
   std::string Title() { return title_; }
-  std::vector<std::vector<std::string> > Sentenses() { return sentenses_; }
-  std::string LongestPanelName() { return longest_panel_name_; }
-  std::string LongestOptionName() { return longest_option_name_; }
-  int MaxOptinsCount() { return max_options_count_; }
+  QList<QStringList> Sentenses() { return sentenses_; }
+  Type type() { return type_; }
 };
