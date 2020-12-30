@@ -24,14 +24,13 @@ int usage() {
   // Синтаксис справки по аргументам командной строки на основе:
   // https://developers.google.com/style/code-syntax
   std::cerr << R"(Usage:
-  fltkdialog [-T] { -P | [-I] [-C] [-R] [-D] [-F] }
+  fltkdialog [-T] { -P | [-I] [-C] [-R] [-D] }
 Key description:
   -T Window Title; Without parameter window is borderless
   -I var_name [initial string];
   -C var_name option1 ...;
   -R var_name option1 option2 ...; 
   -D var_name [initial directory]; default=~
-  -F var_name [initial file]; default=empty
   -P process_binary [arg1 ...])"
             << std::endl;
   return 1;
