@@ -3,6 +3,7 @@
 #include <QCheckBox>
 #include <QDebug>
 #include <QFileDialog>
+#include <QGridLayout>
 #include <QGroupBox>
 #include <QHBoxLayout>
 #include <QLabel>
@@ -16,7 +17,8 @@
 
 MainWindowDialog::MainWindowDialog(Cfg* cfg)
     : MainWindow(), positioning_done_(false) {
-  QVBoxLayout* vbl = new QVBoxLayout;
+  QGridLayout* gl = new QGridLayout;
+  int row = 0;
   for (auto& s : cfg->Sentenses()) {
     QGroupBox* gb = new QGroupBox;
     QHBoxLayout* hbl = new QHBoxLayout;
@@ -24,7 +26,6 @@ MainWindowDialog::MainWindowDialog(Cfg* cfg)
     QString title = s.at(1);
 
     QStringList values(s.begin() + 2, s.end());
-    hbl->addWidget(new QLabel(title));
     for (auto& ss : values) {
       if (type == "-I")
         hbl->addWidget(new QLineEdit(ss));
@@ -41,10 +42,12 @@ MainWindowDialog::MainWindowDialog(Cfg* cfg)
       }
     }
     gb->setLayout(hbl);
-    vbl->addWidget(gb);
+    gl->addWidget(new QLabel(title), row, 0);
+    gl->addWidget(gb, row, 1);
+    ++row;
   }
   QWidget* w = new QWidget;
-  w->setLayout(vbl);
+  w->setLayout(gl);
   this->setCentralWidget(w);
 }
 
