@@ -1,5 +1,4 @@
-#ifndef MAINWINDOWDIALOG_H
-#define MAINWINDOWDIALOG_H
+#pragma once
 
 #include "cfg.hpp"
 #include "mainwindow.hpp"
@@ -11,5 +10,3 @@ class MainWindowDialog : public MainWindow {
   MainWindowDialog(Cfg* cfg);
   virtual void NumInstancesChanged(int, int) final;
 };
-
-#endif  // MAINWINDOWDIALOG_H

@@ -15,16 +15,20 @@
 
 class Cfg {
  public:
-  enum class Type { kDialog, kProcess, kProgress, kOSD };
+  enum class Mode { kUsage, kDialog, kProcess, kProgressBar, kOSD, kMenu };
 
  private:
-  std::string title_{"xxdialog"};
   QList<QStringList> sentenses_;
-  Type type_;
+  Mode mode_;
+  int argc_;
+  char** argv_;
 
  public:
-  bool Init(int argc, char** argv);
-  std::string Title() { return title_; }
+  Cfg(int argc, char** argv);
+  ~Cfg();
   QList<QStringList> Sentenses() { return sentenses_; }
-  Type type() { return type_; }
+  Mode mode() { return mode_; }
+  QString Usage();
+  int& Argc() { return argc_; }
+  char** Argv() { return argv_; }
 };

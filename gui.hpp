@@ -10,7 +10,7 @@ class Gui {
   MainWindow* mainwindow_;
 
  public:
-  Gui(int, char**, Cfg*);
+  Gui(Cfg*);
   ~Gui();
   int Run();
   void NumInstancesChanged(int, int);
