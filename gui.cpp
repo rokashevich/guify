@@ -18,7 +18,7 @@ Gui::Gui(Cfg* cfg) {
     case Cfg::Mode::kMenu:
       break;
     default:
-      mainwindow_ = new MainWindowUsage(cfg);
+      mainwindow_ = new MainWindowUsage;
   }
   mainwindow_->show();
 }

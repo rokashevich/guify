@@ -3,91 +3,78 @@
 #include <pwd.h>
 #include <unistd.h>
 
+#include <QDebug>
 #include <QString>
 #include <algorithm>
 
-Cfg::Cfg(int argc, char** argv) : argc_(argc), argv_(argv) {
-  const QString modes = "DPBOM";  // Возможные режимы, см. Cfg::Usage().
-  mode_ = Mode::kUsage;  // Режим по умолчанию - выводить справку.
+Cfg::Cfg(int argc, char** argv)
+    : argc_(argc),
+      argv_(argv),
+      mode_params_(argv_ + 2, argv_ + argc_),
+      mode_(Mode::kUsage),
+      setup_(nullptr) {
+  QString modes = "DPBOM";  // Возможные режимы, см. Cfg::Usage().
   if (argc_ < 2) return;  // Выводим справку!
   QChar mode = *argv_[1];
   if (!modes.contains(mode)) return;
   switch (mode.toLatin1()) {
     case 'D':
+      setup_ = SetupDialog();
+      mode_ = Mode::kDialog;
       break;
     case 'P':
+      mode_ = Mode::kProcess;
       break;
     case 'B':
+      mode_ = Mode::kProgressBar;
       break;
     case 'O':
+      mode_ = Mode::kOSD;
       break;
     case 'M':
+      mode_ = Mode::kMenu;
       break;
-    default:
-      return;  // Выводим справку!
-  }
-  std::vector<std::string> possible_args = {"-T", "-I", "-C", "-R", "-D", "-P"};
-  for (int i = 1; i < argc; ++i) {
-    QString arg = QString(argv[i]);
-    if (arg == "-T") {
-      if (argc > i + 1 &&
-          !std::any_of(possible_args.begin(), possible_args.end(),
-                       [=](std::string k) { return k == argv[i + 1]; })) {
-        continue;
-      }
-    } else if (std::any_of(possible_args.begin(), possible_args.end(),
-                           [=](std::string s) {
-                             return QString::fromStdString(s) == arg;
-                           })) {
-      QStringList sentense = {arg};
-      for (++i; i < argc; ++i) {
-        arg = QString(argv[i]);
-        if (std::any_of(possible_args.begin(), possible_args.end(),
-                        [=](std::string s) {
-                          return QString::fromStdString(s) == arg;
-                        })) {
-          --i;
-          break;
-        }
-        sentense.push_back(arg);
-      }
-      sentenses_.push_back(sentense);
-    }
-  }
-
-  // Выставляем значения по умолчанию если не заданы.
-  for (auto& sentense : sentenses_) {
-    if (sentense.at(0) == "-D") {
-      if (sentense.size() == 2) {
-        struct passwd* pw = getpwuid(getuid());
-        QString initial_directory = pw->pw_dir;
-        sentense.push_back(initial_directory);
-      }
-    }
-    if (sentense.at(0) == "-I") {
-      if (sentense.size() == 2) {
-        sentense.push_back("");
-      }
-    }
   }
 }
 
 Cfg::~Cfg() {}
 
-QString Cfg::Usage() {
-  return R"(bguify { D | P | B | O | M }
-    D (for Dialog) options:
-      I text_input_var_name [initial string];
-      C checkbox_var_name option1 ...;
-      R radio_var_name option1 option2 ...;
-      D directory_var_name [initial directory]; default=~
+void* Cfg::SetupDialog() {
+  const QString keys = "IRCD";
+  auto char_to_enum = [](char c) {
+    switch (c) {
+      case 'I':
+        return Cfg::SetupDialog::kInput;
+      case 'R':
+        return Cfg::SetupDialog::kRadio;
+      case 'C':
+        return Cfg::SetupDialog::kCheck;
+      case 'D':
+      default:
+        return Cfg::SetupDialog::kDir;
+    }
+  };
 
-    P (for Process) options:
-      process_binary [arg1 ...]
+  QVector<DialogEntry> setup;
 
-    B (for progressbar)
-    O (for OSD)
+  QStringList buf;
+  for (auto it = mode_params_.rbegin(); it != mode_params_.rend(); ++it) {
+    const QString param = *it;
+    if (param.size() == 1 && keys.contains(param)) {
+      if (buf.size() == 0) {
+        qDebug() << "buf empty, param = " + param;
+        return nullptr;
+      }
+      enum Cfg::SetupDialog type = char_to_enum(param.at(0).toLatin1());
+      const QString title = buf.front();
+      buf.removeFirst();
+      setup.push_front(DialogEntry{type, title, buf});
+      buf.clear();
+      continue;
+    }
+    buf.push_front(param);
+  }
 
-    M (for piped menu) options:
-      openbox syntaxed pipe menu script | folder)";
+  if (setup.size() == 0) return nullptr;
+  return new QVector<DialogEntry>{setup};
 }

@@ -1,5 +1,6 @@
 #include "mainwindowdialog.hpp"
 
+#include <QChar>
 #include <QCheckBox>
 #include <QDebug>
 #include <QFileDialog>
@@ -18,29 +19,34 @@
 MainWindowDialog::MainWindowDialog(Cfg* cfg)
     : MainWindow(), positioning_done_(false) {
   QGridLayout* gl = new QGridLayout;
+  QVector<Cfg::DialogEntry>* setup =
+      static_cast<QVector<Cfg::DialogEntry>*>(cfg->Setup());
   int row = 0;
-  for (auto& s : cfg->Sentenses()) {
-    QGroupBox* gb = new QGroupBox;
+  for (const auto& a : *setup) {
+    const auto type = a.type;
+    const auto title = a.title;
+    const auto params = a.params;
     QHBoxLayout* hbl = new QHBoxLayout;
-    QString type = s.at(0);
-    QString title = s.at(1);
-
-    QStringList values(s.begin() + 2, s.end());
-    for (auto& ss : values) {
-      if (type == "-I")
-        hbl->addWidget(new QLineEdit(ss));
-      else if (type == "-R")
-        hbl->addWidget(new QRadioButton(ss));
-      else if (type == "-C")
-        hbl->addWidget(new QCheckBox(ss));
-      else if (type == "-D") {
-        qDebug() << "DDD";
-        QPushButton* b = new QPushButton(ss);
-        hbl->addWidget(b);
+    switch (type) {
+      case Cfg::SetupDialog::kInput:
+        hbl->addWidget(new QLineEdit(params.at(0)));
+        break;
+      case Cfg::SetupDialog::kRadio:
+        for (const auto& p : params) hbl->addWidget(new QRadioButton(p));
+        break;
+      case Cfg::SetupDialog::kCheck:
+        for (const auto& p : params) hbl->addWidget(new QCheckBox(p));
+        break;
+      case Cfg::SetupDialog::kDir: {
+        QPushButton* b = new QPushButton(params.at(0));
         connect(b, &QPushButton::clicked,
                 [b]() { b->setText(QFileDialog::getExistingDirectory()); });
-      }
+        hbl->addWidget(b);
+      } break;
+      default:
+        break;
     }
+    QGroupBox* gb = new QGroupBox;
     gb->setLayout(hbl);
     gl->addWidget(new QLabel(title), row, 0);
     gl->addWidget(gb, row, 1);

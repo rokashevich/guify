@@ -5,6 +5,6 @@
 
 class MainWindowUsage : public MainWindow {
  public:
-  MainWindowUsage(Cfg*);
+  MainWindowUsage();
   virtual void NumInstancesChanged(int, int) final{};
 };

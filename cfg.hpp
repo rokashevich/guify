@@ -9,26 +9,34 @@
 // Эти поля будут нужны для красивой компоновки виджетов в классе Xxdialog.
 
 #include <QList>
+#include <QPair>
 #include <QStringList>
-#include <iostream>
-#include <vector>
+#include <QVector>
 
 class Cfg {
  public:
   enum class Mode { kUsage, kDialog, kProcess, kProgressBar, kOSD, kMenu };
 
+  enum class SetupDialog { kInput, kRadio, kCheck, kDir };
+  struct DialogEntry {
+    SetupDialog type;
+    QString title;
+    QStringList params;
+  };
+
  private:
-  QList<QStringList> sentenses_;
-  Mode mode_;
   int argc_;
   char** argv_;
+  const QStringList mode_params_;
+  Mode mode_;
+  void* setup_;
 
  public:
   Cfg(int argc, char** argv);
   ~Cfg();
-  QList<QStringList> Sentenses() { return sentenses_; }
+  auto& Setup() { return setup_; }
   Mode mode() { return mode_; }
-  QString Usage();
   int& Argc() { return argc_; }
   char** Argv() { return argv_; }
+  void* SetupDialog();
 };
