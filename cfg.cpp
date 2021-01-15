@@ -19,7 +19,7 @@ Cfg::Cfg(int argc, char** argv)
   if (!modes.contains(mode)) return;
   switch (mode.toLatin1()) {
     case 'D':
-      setup_ = SetupDialog();
+      setup_ = ModeDialog();
       mode_ = Mode::kDialog;
       break;
     case 'P':
@@ -39,24 +39,23 @@ Cfg::Cfg(int argc, char** argv)
 
 Cfg::~Cfg() {}
 
-void* Cfg::SetupDialog() {
-  const QString keys = "IRCD";
+void* Cfg::ModeDialog() {
+  const QString keys = "TIRCD";
   auto char_to_enum = [](char c) {
     switch (c) {
       case 'I':
-        return Cfg::SetupDialog::kInput;
+        return Cfg::ModeDialog::kInput;
       case 'R':
-        return Cfg::SetupDialog::kRadio;
+        return Cfg::ModeDialog::kRadio;
       case 'C':
-        return Cfg::SetupDialog::kCheck;
+        return Cfg::ModeDialog::kCheck;
       case 'D':
       default:
-        return Cfg::SetupDialog::kDir;
+        return Cfg::ModeDialog::kDir;
     }
   };
-
+  QString title;
   QVector<DialogEntry> setup;
-
   QStringList buf;
   for (auto it = mode_params_.rbegin(); it != mode_params_.rend(); ++it) {
     const QString param = *it;
@@ -65,10 +64,13 @@ void* Cfg::SetupDialog() {
         qDebug() << "buf empty, param = " + param;
         return nullptr;
       }
-      enum Cfg::SetupDialog type = char_to_enum(param.at(0).toLatin1());
-      const QString title = buf.front();
-      buf.removeFirst();
-      setup.push_front(DialogEntry{type, title, buf});
+      if (param == "T") {
+        title = buf.front();
+      } else {
+        enum Cfg::ModeDialog type = char_to_enum(param.at(0).toLatin1());
+        setup.push_front(DialogEntry{type, buf.front(),
+                                     QStringList(buf.begin() + 1, buf.end())});
+      }
       buf.clear();
       continue;
     }
@@ -76,5 +78,5 @@ void* Cfg::SetupDialog() {
   }
 
   if (setup.size() == 0) return nullptr;
-  return new QVector<DialogEntry>{setup};
+  return new Dialog{title, setup};
 }
