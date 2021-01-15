@@ -15,7 +15,6 @@
 Swarm::Swarm()
     : program_pid_(getpid()),
       program_name_(helpers::GetProgramNameByPid(program_pid_)) {
-  std::cout << "CONSTRUCTOR" << std::endl;
   sem_init(&semaphore_, 0, 1);
 }
 Swarm::~Swarm() { Stop(); }
@@ -55,12 +54,12 @@ void Swarm::RunServer() {
       }
       auto recv_thread_function = [](void* parameter) -> void* {
         int s = *(int*)parameter;
-        std::cout << "someone connected " << s << std::endl;
+        std::cerr << "someone connected " << s << std::endl;
         sem_post(Swarm::Singleton().Semaphore());
         char buf[1];
         recv(s, buf, sizeof(buf), 0);
         close(s);
-        std::cout << "someone disconnected " << s << std::endl;
+        std::cerr << "someone disconnected " << s << std::endl;
         sem_post(Swarm::Singleton().Semaphore());
         return nullptr;
       };
@@ -125,7 +124,7 @@ void Swarm::Reconnect() {
     char buf[1];
     recv(s, buf, sizeof(buf), 0);
     close(s);
-    std::cout << "disconnected from client" << std::endl;
+    std::cerr << "disconnected from client" << std::endl;
     return nullptr;
   };
   for (auto pid : instances_pids_) {

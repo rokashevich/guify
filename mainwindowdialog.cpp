@@ -81,11 +81,17 @@ MainWindowDialog::MainWindowDialog(Cfg* cfg)
       results.append(qMakePair(title, values));
     }
 
-    for (auto result : results) {
+    QString text;
+    for (auto& result : results) {
       QString title = result.first;
       QStringList values = result.second;
-      qInfo() << title + "=(" + values.join(" ") + ")";
+      text +=
+          title + "=" +
+          (values.size() > 1 ? "(" + values.join(" ") + ") " : values.first()) +
+          "\n";
     }
+    printf("%s", text.toStdString().c_str());
+    exit(0);
   });
 
   QWidget* w = new QWidget;

@@ -91,7 +91,6 @@ inline std::vector<pid_t> PidOf(std::string program_name) {
   //    std::cin.clear();
   //  const std::string child_stdout{std::istreambuf_iterator<char>(std::cin),
   //                                 std::istreambuf_iterator<char>()};
-  std::cout << "!!!" << child_stdout << "???" << std::endl;
   std::regex e("[0-9]+");
   auto begin =
       std::sregex_iterator(child_stdout.begin(), child_stdout.end(), e);
