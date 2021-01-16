@@ -10,6 +10,7 @@
 
 #include <QList>
 #include <QPair>
+#include <QSet>
 #include <QStringList>
 #include <QVector>
 
@@ -27,6 +28,11 @@ class Cfg {
     QString title;
     QVector<DialogEntry> params;
   };
+  struct Process {
+    QSet<QPair<QString, QString>> environment;
+    QString binary;
+    QStringList arguments;
+  };
 
  private:
   int argc_;
@@ -43,4 +49,5 @@ class Cfg {
   int& Argc() { return argc_; }
   char** Argv() { return argv_; }
   void* ModeDialog();
+  void* ModeProcess();
 };

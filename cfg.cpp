@@ -23,6 +23,7 @@ Cfg::Cfg(int argc, char** argv)
       mode_ = Mode::kDialog;
       break;
     case 'P':
+      setup_ = ModeProcess();
       mode_ = Mode::kProcess;
       break;
     case 'B':
@@ -79,4 +80,21 @@ void* Cfg::ModeDialog() {
 
   if (setup.size() == 0) return nullptr;
   return new Dialog{title, setup};
+}
+
+void* Cfg::ModeProcess() {
+  Process cfg;
+  for (const auto& param : mode_params_) {
+    if (param.contains('=') && cfg.binary.isEmpty()) {
+      auto parts = param.split('=');
+      auto env_name = parts.at(0);
+      auto env_val = parts.at(1);
+      cfg.environment.insert(qMakePair(env_name, env_val));
+    } else if (cfg.binary.isEmpty()) {
+      cfg.binary = param;
+    } else {
+      cfg.arguments.append(param);
+    }
+  }
+  return new Process{cfg};
 }

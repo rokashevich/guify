@@ -1,6 +1,7 @@
 #include "gui.hpp"
 
 #include "mainwindowdialog.hpp"
+#include "mainwindowprocess.hpp"
 #include "mainwindowusage.hpp"
 
 Gui::Gui(Cfg* cfg) {
@@ -10,6 +11,7 @@ Gui::Gui(Cfg* cfg) {
       mainwindow_ = new MainWindowDialog(cfg);
       break;
     case Cfg::Mode::kProcess:
+      mainwindow_ = new MainWindowProcess(cfg);
       break;
     case Cfg::Mode::kProgressBar:
       break;
