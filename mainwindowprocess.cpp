@@ -39,11 +39,12 @@ MainWindowProcess::MainWindowProcess(Cfg* cfg)
   connect(p, &QProcess::readyReadStandardOutput, [te, p]() {
     const QString line = p->readAllStandardOutput().trimmed();
     te->appendPlainText(line);
+    fprintf(stdout, "%s\n", line.toStdString().c_str());
   });
   connect(p, &QProcess::readyReadStandardError, [te, p]() {
-    const QString line =
-        "<font color='red'>" + p->readAllStandardError().trimmed() + "</font>";
-    te->appendHtml(line);
+    const QString line = p->readAllStandardError().trimmed();
+    te->appendHtml("<font color='red'>" + line + "</font>");
+    fprintf(stderr, "%s\n", line.toStdString().c_str());
   });
   this->setCentralWidget(te);
 

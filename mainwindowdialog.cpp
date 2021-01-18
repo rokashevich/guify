@@ -90,7 +90,7 @@ MainWindowDialog::MainWindowDialog(Cfg* cfg)
           (values.size() > 1 ? "(" + values.join(" ") + ") " : values.first()) +
           "\n";
     }
-    printf("%s", text.toStdString().c_str());
+    fprintf(stdout, "%s", text.toStdString().c_str());
     exit(0);
   });
 
