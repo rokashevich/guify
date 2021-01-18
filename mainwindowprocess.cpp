@@ -1,5 +1,6 @@
 #include "mainwindowprocess.hpp"
 
+#include <QApplication>
 #include <QChar>
 #include <QCheckBox>
 #include <QDebug>
@@ -9,10 +10,12 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
+#include <QPlainTextEdit>
+#include <QProcess>
+#include <QProcessEnvironment>
 #include <QPushButton>
 #include <QRadioButton>
 #include <QString>
-#include <QTextEdit>
 #include <QVBoxLayout>
 #include <QVector>
 #include <QWidget>
@@ -22,14 +25,29 @@ MainWindowProcess::MainWindowProcess(Cfg* cfg)
   const auto setup = static_cast<Cfg::Process*>(cfg->Setup());
   setWindowTitle(setup->binary);
 
-  QString s;
-  for (auto env : setup->environment)
-    s += "env: " + env.first + "=" + env.second + "\n";
-  for (auto arg : setup->arguments) s += "arg: " + arg + "\n";
+  QProcessEnvironment env;
+  for (const auto& e : qAsConst(setup->environment))
+    env.insert(e.first, e.second);
+  QProcess* p = new QProcess;
+  p->setProcessEnvironment(env);
+  p->setProgram(setup->binary);
+  p->setArguments(setup->arguments);
+  p->start();
 
-  QTextEdit* te = new QTextEdit;
-  te->setText(s);
+  QPlainTextEdit* te = new QPlainTextEdit;
+  te->setMaximumBlockCount(1024);
+  connect(p, &QProcess::readyReadStandardOutput, [te, p]() {
+    const QString line = p->readAllStandardOutput().trimmed();
+    te->appendPlainText(line);
+  });
+  connect(p, &QProcess::readyReadStandardError, [te, p]() {
+    const QString line =
+        "<font color='red'>" + p->readAllStandardError().trimmed() + "</font>";
+    te->appendHtml(line);
+  });
   this->setCentralWidget(te);
+
+  connect(p, &QProcess::finished, []() { QApplication::quit(); });
 }
 
 void MainWindowProcess::NumInstancesChanged(int number, int index) {
