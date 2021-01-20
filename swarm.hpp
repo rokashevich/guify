@@ -9,11 +9,8 @@
 #include <tuple>
 #include <vector>
 class Swarm {
-  const pid_t program_pid_;
-  const std::string program_name_;
   sem_t semaphore_;
   int server_socket_;
-  std::vector<pid_t> instances_pids_;
   std::function<void(int, int)> callback_;
   void RunServer();  // Сервер, к которому будут коннектиться другие инстансы.
   pthread_t server_thread_id_;
@@ -31,6 +28,9 @@ class Swarm {
   Swarm& operator=(const Swarm&) = delete;
 
  public:
+  const pid_t program_pid_;
+  const std::string program_name_;
+  std::vector<pid_t> instances_pids_;
   void Start(std::function<void(int, int)> callback);
   void Stop();
   sem_t* Semaphore();

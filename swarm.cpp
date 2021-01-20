@@ -77,7 +77,7 @@ void Swarm::RunServer() {
 void Swarm::Reconnect() {
   // Получаем обновлённый список PIDов всех инстансов программы.
   instances_pids_ = helpers::PidOf(program_name_);
-  helpers::MessageDebug(instances_pids_, "instances_pids_=");
+  // helpers::MessageDebug(instances_pids_, "instances_pids_=");
   //  instances_pids_ = helpers::PidOf(program_name_);
   //  helpers::MessageDebug(instances_pids_, "2 instances_pids_=");
   //  instances_pids_ = helpers::PidOf(program_name_);
@@ -148,8 +148,12 @@ void Swarm::RunClient() {
     while (true) {
       sem_wait(semaphore);
       swarm.Reconnect();
-
-      swarm.Callback(444, 333);
+      const int number = swarm.instances_pids_.size();
+      const auto it =
+          std::find(swarm.instances_pids_.begin(), swarm.instances_pids_.end(),
+                    swarm.program_pid_);
+      const int index = std::distance(swarm.instances_pids_.begin(), it);
+      swarm.Callback(number, index);
     }
   };
   pthread_t thread_id;

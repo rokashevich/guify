@@ -16,8 +16,7 @@
 #include <QVector>
 #include <QWidget>
 
-MainWindowDialog::MainWindowDialog(Cfg* cfg)
-    : MainWindow(), positioning_done_(false) {
+MainWindowDialog::MainWindowDialog(Cfg* cfg) : MainWindow() {
   const auto setup = static_cast<Cfg::Dialog*>(cfg->Setup());
   const auto params = static_cast<QVector<Cfg::DialogEntry>*>(&setup->params);
 
@@ -97,11 +96,4 @@ MainWindowDialog::MainWindowDialog(Cfg* cfg)
   QWidget* w = new QWidget;
   w->setLayout(gl);
   this->setCentralWidget(w);
-}
-
-void MainWindowDialog::NumInstancesChanged(int number, int index) {
-  Q_UNUSED(number);
-  Q_UNUSED(index);
-  if (positioning_done_) return;
-  positioning_done_ = true;
 }

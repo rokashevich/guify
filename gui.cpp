@@ -1,5 +1,7 @@
 #include "gui.hpp"
 
+#include <QDebug>
+
 #include "mainwindowdialog.hpp"
 #include "mainwindowprocess.hpp"
 #include "mainwindowusage.hpp"

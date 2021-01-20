@@ -6,5 +6,4 @@
 class MainWindowUsage : public MainWindow {
  public:
   MainWindowUsage();
-  virtual void NumInstancesChanged(int, int) final{};
 };

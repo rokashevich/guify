@@ -20,8 +20,7 @@
 #include <QVector>
 #include <QWidget>
 
-MainWindowProcess::MainWindowProcess(Cfg* cfg)
-    : MainWindow(), positioning_done_(false) {
+MainWindowProcess::MainWindowProcess(Cfg* cfg) : MainWindow() {
   const auto setup = static_cast<Cfg::Process*>(cfg->Setup());
   setWindowTitle(setup->binary);
 
@@ -52,8 +51,21 @@ MainWindowProcess::MainWindowProcess(Cfg* cfg)
 }
 
 void MainWindowProcess::NumInstancesChanged(int number, int index) {
-  Q_UNUSED(number);
-  Q_UNUSED(index);
-  if (positioning_done_) return;
-  positioning_done_ = true;
+  int x = 100;
+  int y = 100;
+  int w = AvailableWidth() - 200;
+  int h = AvailableHeight() - 200;
+  if (number > 1) {
+    w /= 2;
+    if (number % 2) {  // четное кол-во окон
+      h /= number / 2;
+    } else {  // нечётное кол-во окон
+      h = number == index ? h / (number + 1) / 2 : h / number / 2;
+    }
+    if (index > number / 2) {
+      x = x + w;
+    }
+    y += index * h;
+  }
+  // setGeometry(x, y, w, h);
 }

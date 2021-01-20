@@ -9,7 +9,7 @@ class MainWindow : public QMainWindow {
 
  public:
   explicit MainWindow(QWidget* parent = nullptr);
-  virtual void NumInstancesChanged(int, int) = 0;
+  virtual void NumInstancesChanged(int, int);
   int AvailableWidth();
   int AvailableHeight();
  signals:

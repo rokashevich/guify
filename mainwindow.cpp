@@ -4,8 +4,16 @@
 #include <QGuiApplication>
 #include <QScreen>
 
-MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
-  QScreen* screen = QGuiApplication::primaryScreen();
+MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {}
 
-  // this->setGeometry(100, 100, 500, 500);
+void MainWindow::NumInstancesChanged(int, int) {
+  // Для переопределения в наследнике, если надо.
+  // По умолчанию никак не реагируем.
+}
+
+int MainWindow::AvailableWidth() {
+  return QGuiApplication::primaryScreen()->availableSize().width();
+}
+int MainWindow::AvailableHeight() {
+  return QGuiApplication::primaryScreen()->availableSize().height();
 }
