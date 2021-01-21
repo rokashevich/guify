@@ -1,6 +1,6 @@
 #pragma once
+#include <QDebug>
 #include <QMainWindow>
-
 class MainWindow : public QMainWindow {
   Q_OBJECT
 
@@ -9,8 +9,5 @@ class MainWindow : public QMainWindow {
 
  public:
   explicit MainWindow(QWidget* parent = nullptr);
-  virtual void NumInstancesChanged(int, int);
-  int AvailableWidth();
-  int AvailableHeight();
- signals:
+  virtual void NumberIndexChanged(int, int);
 };

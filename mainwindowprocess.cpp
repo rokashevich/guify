@@ -7,6 +7,7 @@
 #include <QFileDialog>
 #include <QGridLayout>
 #include <QGroupBox>
+#include <QGuiApplication>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
@@ -15,6 +16,7 @@
 #include <QProcessEnvironment>
 #include <QPushButton>
 #include <QRadioButton>
+#include <QRect>
 #include <QString>
 #include <QVBoxLayout>
 #include <QVector>
@@ -50,22 +52,24 @@ MainWindowProcess::MainWindowProcess(Cfg* cfg) : MainWindow() {
   connect(p, &QProcess::finished, []() { QApplication::quit(); });
 }
 
-void MainWindowProcess::NumInstancesChanged(int number, int index) {
-  int x = 100;
-  int y = 100;
-  int w = AvailableWidth() - 200;
-  int h = AvailableHeight() - 200;
+void MainWindowProcess::NumberIndexChanged(int number, int index) {
+  //  qDebug() << "number:" << number << "index:" << index;
+  const QRect geom = QGuiApplication::primaryScreen()->availableGeometry();
+  int x = geom.x();
+  int y = geom.y();
+  int w = geom.width();
+  int h = geom.height();
   if (number > 1) {
     w /= 2;
-    if (number % 2) {  // четное кол-во окон
-      h /= number / 2;
-    } else {  // нечётное кол-во окон
-      h = number == index ? h / (number + 1) / 2 : h / number / 2;
-    }
-    if (index > number / 2) {
-      x = x + w;
-    }
-    y += index * h;
+    const int half = number / 2;
+    const int column_rows = number % 2 == 0 ? half
+                            : index < half  ? half
+                                            : half + 1;
+
+    h /= column_rows;
+    x = index < half ?: x + w;
+    y += index < half ? index * h : (index - half) * h;
+    //    qDebug() << "column_rows:" << column_rows;
   }
-  // setGeometry(x, y, w, h);
+  setGeometry(x, y, w, h);
 }

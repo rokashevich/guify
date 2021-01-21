@@ -25,7 +25,7 @@ int main(int argc, char** argv) {
   Cfg* cfg = new Cfg(argc, argv);
   Gui* gui = new Gui(cfg);
   Swarm& swarm = Swarm::Singleton();
-  swarm.Start(std::bind(&Gui::NumInstancesChanged, gui, std::placeholders::_1,
+  swarm.Start(std::bind(&Gui::SwarmCallback, gui, std::placeholders::_1,
                         std::placeholders::_2));
   return gui->Run();
 }

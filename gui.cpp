@@ -6,7 +6,7 @@
 #include "mainwindowprocess.hpp"
 #include "mainwindowusage.hpp"
 
-Gui::Gui(Cfg* cfg) {
+Gui::Gui(Cfg* cfg) : QObject() {
   application_ = new QApplication(cfg->Argc(), cfg->Argv());
   switch (cfg->mode()) {
     case Cfg::Mode::kDialog:
@@ -25,10 +25,12 @@ Gui::Gui(Cfg* cfg) {
       mainwindow_ = new MainWindowUsage;
   }
   mainwindow_->show();
+  QObject::connect(this, &Gui::NumberIndexChanged, mainwindow_,
+                   &MainWindow::NumberIndexChanged);
 }
 
-void Gui::NumInstancesChanged(int number, int index) {
-  mainwindow_->NumInstancesChanged(number, index);
+void Gui::SwarmCallback(int number, int index) {
+  emit NumberIndexChanged(number, index);
 }
 
 int Gui::Run() { return application_->exec(); }
