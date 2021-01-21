@@ -37,7 +37,7 @@ class Cfg {
  private:
   int argc_;
   char** argv_;
-  const QStringList mode_params_;
+  QStringList mode_params_;
   Mode mode_;
   void* setup_;
 

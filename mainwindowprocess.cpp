@@ -17,6 +17,7 @@
 #include <QPushButton>
 #include <QRadioButton>
 #include <QRect>
+#include <QScreen>
 #include <QString>
 #include <QVBoxLayout>
 #include <QVector>
@@ -49,7 +50,9 @@ MainWindowProcess::MainWindowProcess(Cfg* cfg) : MainWindow() {
   });
   this->setCentralWidget(te);
 
-  connect(p, &QProcess::finished, []() { QApplication::quit(); });
+  connect(p,
+    static_cast<void(QProcess::*)(int, QProcess::ExitStatus)>
+      (&QProcess::finished), [](){QGuiApplication::quit();});
 }
 
 void MainWindowProcess::NumberIndexChanged(int number, int index) {

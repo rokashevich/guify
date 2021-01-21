@@ -5,14 +5,18 @@
 
 #include <QDebug>
 #include <QString>
+#include <QVector>
 #include <algorithm>
+#include <vector>
+#include <string>
 
 Cfg::Cfg(int argc, char** argv)
     : argc_(argc),
       argv_(argv),
-      mode_params_(argv_ + 2, argv_ + argc_),
+      //mode_params_(argv_ + 2, argv_ + argc_),
       mode_(Mode::kUsage),
       setup_(nullptr) {
+  for (int i=2;i<argc_;++i)mode_params_.append(argv_[i]); // для qt 5.9
   QString modes = "DPBOM";  // Возможные режимы, см. Cfg::Usage().
   if (argc_ < 2) return;  // Выводим справку!
   QChar mode = *argv_[1];
@@ -69,8 +73,8 @@ void* Cfg::ModeDialog() {
         title = buf.front();
       } else {
         enum Cfg::ModeDialog type = char_to_enum(param.at(0).toLatin1());
-        setup.push_front(DialogEntry{type, buf.front(),
-                                     QStringList(buf.begin() + 1, buf.end())});
+        buf.removeFirst();
+        setup.push_front(DialogEntry{type, buf.front(), buf});
       }
       buf.clear();
       continue;
