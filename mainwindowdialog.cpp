@@ -59,6 +59,7 @@ MainWindowDialog::MainWindowDialog(Cfg* cfg) : MainWindow() {
     QGroupBox* gb = new QGroupBox();
 
     // До Qt 5.14.0 есть баг - большой отступ сверху. Нейтрализуем:
+    // https://bugreports.qt.io/browse/QTBUG-44056
     gb->setStyleSheet("QGroupBox{border:0px;}");
 
     gb->setLayout(hbl);
