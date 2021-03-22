@@ -20,7 +20,7 @@ MainWindowDialog::MainWindowDialog(Cfg* cfg) : MainWindow() {
   const auto setup = static_cast<Cfg::Dialog*>(cfg->Setup());
   const auto params = static_cast<QVector<Cfg::DialogEntry>*>(&setup->params);
 
-  setWindowTitle(setup->title);  // Заголовок пустой для чистоты UI.
+  setWindowTitle(cfg->Title());  // Заголовок пустой для чистоты UI.
 
   QGridLayout* gl = new QGridLayout;
   int row = 0;
@@ -45,10 +45,22 @@ MainWindowDialog::MainWindowDialog(Cfg* cfg) : MainWindow() {
                 [b]() { b->setText(QFileDialog::getExistingDirectory()); });
         hbl->addWidget(b);
       } break;
+      case Cfg::ModeDialog::kFile: {
+        const QString path = params.length() ? params.at(0) : "";
+        QPushButton* b = new QPushButton(path);
+        connect(b, &QPushButton::clicked, [b, path]() {
+          b->setText(QFileDialog::getOpenFileName(Q_NULLPTR, "", path));
+        });
+        hbl->addWidget(b);
+      } break;
       default:
         break;
     }
-    QGroupBox* gb = new QGroupBox;
+    QGroupBox* gb = new QGroupBox();
+
+    // До Qt 5.14.0 есть баг - большой отступ сверху. Нейтрализуем:
+    gb->setStyleSheet("QGroupBox{border:0px;}");
+
     gb->setLayout(hbl);
     gl->addWidget(new QLabel(title), row, 0);
     gl->addWidget(gb, row, 1);

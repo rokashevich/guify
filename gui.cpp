@@ -8,22 +8,28 @@
 
 Gui::Gui(Cfg* cfg) : QObject() {
   application_ = new QApplication(cfg->Argc(), cfg->Argv());
-  switch (cfg->mode()) {
-    case Cfg::Mode::kDialog:
-      mainwindow_ = new MainWindowDialog(cfg);
-      break;
-    case Cfg::Mode::kProcess:
-      mainwindow_ = new MainWindowProcess(cfg);
-      break;
-    case Cfg::Mode::kProgressBar:
-      break;
-    case Cfg::Mode::kOSD:
-      break;
-    case Cfg::Mode::kMenu:
-      break;
-    default:
-      mainwindow_ = new MainWindowUsage;
+
+  if (cfg->ConfigError().length() > 0)
+    mainwindow_ = new MainWindowUsage(cfg);
+  else {
+    switch (cfg->mode()) {
+      case Cfg::Mode::kDialog:
+        mainwindow_ = new MainWindowDialog(cfg);
+        break;
+      case Cfg::Mode::kProcess:
+        mainwindow_ = new MainWindowProcess(cfg);
+        break;
+      case Cfg::Mode::kProgressBar:
+        break;
+      case Cfg::Mode::kOSD:
+        break;
+      case Cfg::Mode::kMenu:
+        break;
+      default:
+        break;
+    }
   }
+
   mainwindow_->show();
   QObject::connect(this, &Gui::NumberIndexChanged, mainwindow_,
                    &MainWindow::NumberIndexChanged);

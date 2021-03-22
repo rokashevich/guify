@@ -2,9 +2,12 @@
 
 #include <QTextEdit>
 
-MainWindowUsage::MainWindowUsage() : MainWindow() {
+MainWindowUsage::MainWindowUsage(Cfg* cfg) : MainWindow() {
   QTextEdit* te = new QTextEdit;
-  te->setText(R"(bguify { D | P | B | O | M }
+  te->setText(cfg->ConfigError() + R"(
+
+Usage:
+bguify [title] { D | P | B | O | M }
     D (for Dialog) options:
       I text_input_var_name [initial string];
       C checkbox_var_name option1 ...;

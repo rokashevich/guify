@@ -16,16 +16,15 @@
 
 class Cfg {
  public:
-  enum class Mode { kUsage, kDialog, kProcess, kProgressBar, kOSD, kMenu };
+  enum class Mode { kDialog, kProcess, kProgressBar, kOSD, kMenu };
 
-  enum class ModeDialog { kInput, kRadio, kCheck, kDir };
+  enum class ModeDialog { kInput, kRadio, kCheck, kDir, kFile };
   struct DialogEntry {
     ModeDialog type;
     QString title;
     QStringList params;
   };
   struct Dialog {
-    QString title;
     QVector<DialogEntry> params;
   };
   struct Process {
@@ -40,14 +39,18 @@ class Cfg {
   QStringList mode_params_;
   Mode mode_;
   void* setup_;
+  QString title_;
+  QString config_error_;
 
  public:
   Cfg(int argc, char** argv);
   ~Cfg();
-  auto& Setup() { return setup_; }
+  void* Setup() { return setup_; }
   Mode mode() { return mode_; }
   int& Argc() { return argc_; }
   char** Argv() { return argv_; }
   void* ModeDialog();
   void* ModeProcess();
+  QString Title() { return title_; }
+  QString ConfigError() { return config_error_; }
 };

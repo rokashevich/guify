@@ -7,20 +7,35 @@
 #include <QString>
 #include <QVector>
 #include <algorithm>
-#include <vector>
 #include <string>
+#include <vector>
 
 Cfg::Cfg(int argc, char** argv)
-    : argc_(argc),
-      argv_(argv),
-      //mode_params_(argv_ + 2, argv_ + argc_),
-      mode_(Mode::kUsage),
-      setup_(nullptr) {
-  for (int i=2;i<argc_;++i)mode_params_.append(argv_[i]); // для qt 5.9
-  QString modes = "DPBOM";  // Возможные режимы, см. Cfg::Usage().
-  if (argc_ < 2) return;  // Выводим справку!
-  QChar mode = *argv_[1];
-  if (!modes.contains(mode)) return;
+    : argc_(argc), argv_(argv), setup_(nullptr), config_error_("") {
+  for (int i = 0; i < argc_; ++i) mode_params_.append(argv_[i]);
+
+  mode_params_.pop_front();  // Удаляем имя самой программы.
+
+  // Заголовок задали?
+  if (mode_params_.length() > 1 && mode_params_.at(0).length() > 1) {
+    title_ = mode_params_.at(0);
+    mode_params_.pop_front();
+  }
+
+  if (mode_params_.length() == 0) {
+    config_error_ = "No arguments provided!";
+    return;
+  }
+
+  QChar mode = mode_params_.at(0).at(0);
+  mode_params_.pop_front();
+
+  QString modes = "DPBOM";
+  if (!modes.contains(mode)) {
+    config_error_ = "Unknown mode (" + QString(mode) + ")!";
+    return;
+  }
+
   switch (mode.toLatin1()) {
     case 'D':
       setup_ = ModeDialog();
@@ -45,8 +60,8 @@ Cfg::Cfg(int argc, char** argv)
 Cfg::~Cfg() {}
 
 void* Cfg::ModeDialog() {
-  const QString keys = "TIRCD";
-  auto char_to_enum = [](char c) {
+  const QString keys = "IRCDF";
+  auto char_to_enum = [this](char c) {
     switch (c) {
       case 'I':
         return Cfg::ModeDialog::kInput;
@@ -55,11 +70,14 @@ void* Cfg::ModeDialog() {
       case 'C':
         return Cfg::ModeDialog::kCheck;
       case 'D':
-      default:
         return Cfg::ModeDialog::kDir;
+      case 'F':
+        return Cfg::ModeDialog::kFile;
+      default:
+        this->config_error_ = "Unknown dialog mode (" + QString(c) + ")!";
+        return static_cast<enum ModeDialog>(c);
     }
   };
-  QString title;
   QVector<DialogEntry> setup;
   QStringList buf;
   for (auto it = mode_params_.rbegin(); it != mode_params_.rend(); ++it) {
@@ -69,21 +87,17 @@ void* Cfg::ModeDialog() {
         qDebug() << "buf empty, param = " + param;
         return nullptr;
       }
-      if (param == "T") {
-        title = buf.front();
-      } else {
-        enum Cfg::ModeDialog type = char_to_enum(param.at(0).toLatin1());
-        buf.removeFirst();
-        setup.push_front(DialogEntry{type, buf.front(), buf});
-      }
+      enum Cfg::ModeDialog type = char_to_enum(param.at(0).toLatin1());
+      const QString title = buf.takeFirst();
+      const QStringList params = buf;
+      setup.push_front(DialogEntry{type, title, params});
       buf.clear();
       continue;
     }
     buf.push_front(param);
   }
-
   if (setup.size() == 0) return nullptr;
-  return new Dialog{title, setup};
+  return new Dialog{setup};
 }
 
 void* Cfg::ModeProcess() {

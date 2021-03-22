@@ -5,5 +5,5 @@
 
 class MainWindowUsage : public MainWindow {
  public:
-  MainWindowUsage();
+  MainWindowUsage(Cfg* cfg);
 };
