@@ -11,6 +11,8 @@
 #include <QLineEdit>
 #include <QPushButton>
 #include <QRadioButton>
+#include <QSettings>
+#include <QStandardPaths>
 #include <QString>
 #include <QVBoxLayout>
 #include <QVector>
@@ -40,9 +42,25 @@ MainWindowDialog::MainWindowDialog(Cfg* cfg) : MainWindow() {
         for (const auto& p : params) hbl->addWidget(new QCheckBox(p));
         break;
       case Cfg::ModeDialog::kDir: {
-        QPushButton* b = new QPushButton(params.at(0));
-        connect(b, &QPushButton::clicked,
-                [b]() { b->setText(QFileDialog::getExistingDirectory()); });
+        QString initial_dir =
+            QStandardPaths::standardLocations(QStandardPaths::HomeLocation)
+                .at(0);
+        if (params.length() != 0) {
+          initial_dir = params.at(0);
+        } else {
+          QSettings settings;
+          const QString s = settings.value("Dialog/kDir" + title).toString();
+          if (s.length()) initial_dir = s;
+        }
+        QPushButton* b = new QPushButton(initial_dir);
+        // Не разрешаем кнопке быть больше, чем полэкрана.
+        b->setMaximumWidth(this->AvailableWidth() / 2);
+        connect(b, &QPushButton::clicked, [b, title]() {
+          const QString changed_dir = QFileDialog::getExistingDirectory();
+          b->setText(changed_dir);
+          QSettings settings;
+          settings.setValue("Dialog/kDir" + title, changed_dir);
+        });
         hbl->addWidget(b);
       } break;
       case Cfg::ModeDialog::kFile: {
@@ -95,12 +113,14 @@ MainWindowDialog::MainWindowDialog(Cfg* cfg) : MainWindow() {
 
     QString text;
     for (auto& result : results) {
-      QString title = result.first;
       QStringList values = result.second;
-      text +=
-          title + "=" +
-          (values.size() > 1 ? "(" + values.join(" ") + ") " : values.first()) +
-          "\n";
+      if (values.count() != 0) {
+        QString title = result.first;
+        text += title + "=" +
+                (values.size() > 1 ? "(" + values.join(" ") + ") "
+                                   : values.first()) +
+                "\n";
+      }
     }
     fprintf(stdout, "%s", text.toStdString().c_str());
     exit(0);

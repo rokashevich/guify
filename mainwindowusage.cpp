@@ -7,7 +7,7 @@ MainWindowUsage::MainWindowUsage(Cfg* cfg) : MainWindow() {
   te->setText(cfg->ConfigError() + R"(
 
 Usage:
-bguify [title] { D | P | B | O | M }
+guify [title] { D | P | B | O | M }
     D (for Dialog) options:
       I text_input_var_name [initial string];
       C checkbox_var_name option1 ...;

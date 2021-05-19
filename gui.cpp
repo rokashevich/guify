@@ -1,5 +1,6 @@
 #include "gui.hpp"
 
+#include <QCoreApplication>
 #include <QDebug>
 
 #include "mainwindowdialog.hpp"
@@ -7,6 +8,9 @@
 #include "mainwindowusage.hpp"
 
 Gui::Gui(Cfg* cfg) : QObject() {
+  QCoreApplication::setOrganizationName("guify");
+  QCoreApplication::setApplicationName("guify");
+
   application_ = new QApplication(cfg->Argc(), cfg->Argv());
 
   if (cfg->ConfigError().length() > 0)

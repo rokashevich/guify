@@ -1,13 +1,13 @@
 #pragma once
 #include <QDebug>
 #include <QMainWindow>
+#include <QScreen>
 class MainWindow : public QMainWindow {
   Q_OBJECT
-
-  int available_width_;
-  int available_height_;
 
  public:
   explicit MainWindow(QWidget* parent = nullptr);
   virtual void NumberIndexChanged(int, int);
+  int AvailableWidth();
+  int AvailableHeight();
 };
