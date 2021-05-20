@@ -8,8 +8,8 @@
 #include "mainwindowusage.hpp"
 
 Gui::Gui(Cfg* cfg) : QObject() {
-  QCoreApplication::setOrganizationName("guify");
   QCoreApplication::setApplicationName("guify");
+  QCoreApplication::setOrganizationName(cfg->Title());
 
   application_ = new QApplication(cfg->Argc(), cfg->Argv());
 

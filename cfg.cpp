@@ -20,6 +20,8 @@ Cfg::Cfg(int argc, char** argv)
   if (mode_params_.length() > 1 && mode_params_.at(0).length() > 1) {
     title_ = mode_params_.at(0);
     mode_params_.pop_front();
+  } else {
+    title_ = "guify";
   }
 
   if (mode_params_.length() == 0) {
