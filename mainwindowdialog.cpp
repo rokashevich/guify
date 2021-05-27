@@ -19,29 +19,32 @@
 #include <QWidget>
 
 MainWindowDialog::MainWindowDialog(Cfg* cfg) : MainWindow() {
-  const auto setup = static_cast<Cfg::Dialog*>(cfg->Setup());
-  const auto params = static_cast<QVector<Cfg::DialogEntry>*>(&setup->params);
+  //  const auto setup = static_cast<Cfg::Dialog*>(cfg->Variable());
+  //  const auto params =
+  //  static_cast<QVector<Cfg::DialogEntry>*>(&setup->params);
 
   setWindowTitle(cfg->Title());  // Заголовок пустой для чистоты UI.
 
   QGridLayout* gl = new QGridLayout;
   int row = 0;
-  for (const auto& a : *params) {
+  QVector<Cfg::DialogEntry> params =
+      cfg->Variable().value<QVector<Cfg::DialogEntry>>();
+  for (const auto& a : params) {
     const auto type = a.type;
     const auto title = a.title;
     const auto params = a.params;
     QHBoxLayout* hbl = new QHBoxLayout;
     switch (type) {
-      case Cfg::ModeDialog::kInput:
+      case Cfg::ConfigureDialogVariable::kInput:
         hbl->addWidget(new QLineEdit(params.at(0)));
         break;
-      case Cfg::ModeDialog::kRadio:
+      case Cfg::ConfigureDialogVariable::kRadio:
         for (const auto& p : params) hbl->addWidget(new QRadioButton(p));
         break;
-      case Cfg::ModeDialog::kCheck:
+      case Cfg::ConfigureDialogVariable::kCheck:
         for (const auto& p : params) hbl->addWidget(new QCheckBox(p));
         break;
-      case Cfg::ModeDialog::kDir: {
+      case Cfg::ConfigureDialogVariable::kDir: {
         QString initial_dir =
             QStandardPaths::standardLocations(QStandardPaths::HomeLocation)
                 .at(0);
@@ -63,7 +66,7 @@ MainWindowDialog::MainWindowDialog(Cfg* cfg) : MainWindow() {
         });
         hbl->addWidget(b);
       } break;
-      case Cfg::ModeDialog::kFile: {
+      case Cfg::ConfigureDialogVariable::kFile: {
         const QString path = params.length() ? params.at(0) : "";
         QPushButton* b = new QPushButton(path);
         connect(b, &QPushButton::clicked, [b, path]() {

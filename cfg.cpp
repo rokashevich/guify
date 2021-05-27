@@ -3,93 +3,169 @@
 #include <pwd.h>
 #include <unistd.h>
 
+#include <QCommandLineOption>
+#include <QCommandLineParser>
+#include <QCoreApplication>
 #include <QDebug>
+#include <QMap>
 #include <QString>
 #include <QVector>
 #include <algorithm>
 #include <string>
+#include <tuple>
 #include <vector>
 
-Cfg::Cfg(int argc, char** argv)
-    : argc_(argc), argv_(argv), setup_(nullptr), config_error_("") {
-  for (int i = 0; i < argc_; ++i) mode_params_.append(argv_[i]);
+Cfg::Cfg(const QStringList& arguments) : config_error_("") {
+  QCoreApplication::setApplicationName("guify");
+  parser_.addHelpOption();
+  parser_.addPositionalArgument("mode", "dialog/osd/process/progress/bar/menu");
+  parser_.parse(arguments);
+  const QStringList args = parser_.positionalArguments();
+  const QString mode = args.isEmpty() ? QString() : args.first();
 
-  mode_params_.pop_front();  // Удаляем имя самой программы.
+  const QCommandLineOption titleOption{"title", "Application title (optional)",
+                                       "string"};
+  const QCommandLineOption positionOption{"position", "Placement (optional)",
+                                          "T/B/L/R/M"};
+  if (mode == "dialog") {
+    mode_ = Cfg::Mode::kDialog;
+    parser_.clearPositionalArguments();
+    parser_.addPositionalArgument("dialog", "Construct dialog", "I R B D F");
+    parser_.addOption(titleOption);
+    parser_.process(arguments);
+    variable_ =
+        ConfigureDialogVariable(parser_.positionalArguments().sliced(1));
+  } else if (mode == "osd") {
+    mode_ = Cfg::Mode::kOSD;
+    parser_.clearPositionalArguments();
+    parser_.addPositionalArgument("dialog", "Construct dialog", "I R B D F");
+    parser_.addOption({"text", "Message to display", "text"});
+    parser_.process(arguments);
+    const QStringList args = parser_.positionalArguments().sliced(1);
+    variable_ = parser_.value("text");
 
-  // Заголовок задали?
-  if (mode_params_.length() > 1 && mode_params_.at(0).length() > 1) {
-    title_ = mode_params_.at(0);
-    mode_params_.pop_front();
   } else {
-    title_ = "guify";
+    parser_.showHelp();
   }
 
-  if (mode_params_.length() == 0) {
-    config_error_ = "No arguments provided!";
-    return;
-  }
+  title_ = parser_.optionNames().contains("title") && parser_.isSet("title")
+               ? parser_.value("title")
+               : "Guify";
+  QCoreApplication::setOrganizationName(title_);
 
-  QChar mode = mode_params_.at(0).at(0);
-  mode_params_.pop_front();
+  //  parser_.addPositionalArgument("mode",
+  //  "dialog/osd/process/progress/bar/menu"); parser_.addOptions({
+  //      {"title", "Application title (optional)", "string"},
+  //      {"dialog", "Construct an Ok/Cancel window", "params"},
+  //  });
+  //  parser_.setOptionsAfterPositionalArgumentsMode(
+  //      QCommandLineParser::ParseAsPositionalArguments);
 
-  QString modes = "DPBOM";
-  if (!modes.contains(mode)) {
-    config_error_ = "Unknown mode (" + QString(mode) + ")!";
-    return;
-  }
+  //  title_ = parser_.value("title");
 
-  switch (mode.toLatin1()) {
-    case 'D':
-      setup_ = ModeDialog();
-      mode_ = Mode::kDialog;
-      break;
-    case 'P':
-      setup_ = ModeProcess();
-      mode_ = Mode::kProcess;
-      break;
-    case 'B':
-      mode_ = Mode::kProgressBar;
-      break;
-    case 'O':
-      mode_ = Mode::kOSD;
-      break;
-    case 'M':
-      mode_ = Mode::kMenu;
-      break;
-  }
+  //  qDebug() << parser_.optionNames();
+
+  //  if (parser_.isSet("title"))
+  //    qDebug() << "title:" << parser_.values("title").join("|");
+  //  if (parser_.isSet("dialog"))
+  //    qDebug() << "dialog:" << parser_.values("dialog").join("|");
+
+  //  QMap<QString, Mode> modes2{{"Dialog", Mode::kHelp},
+  //                             {"OSD", Mode::kOSD},
+  //                             {"Process", Mode::kProcess},
+  //                             {"Progress", Mode::kProgress},
+  //                             {"Menu", Mode::kMenu}};
+  //  QStringList args = parser_.positionalArguments();
+  //  if (QString mode = args.length() == 1 ? args.at(0) : "";
+  //      modes2.contains(mode)) {
+  //    mode_ = modes2.find(mode).value();
+  //  } else {
+  //    mode_ = Mode::kHelp;
+  //  }
+
+  //  qDebug() << "1rest:" << parser_.positionalArguments().join("|");
+
+  //  // source is args.at(0), destination is args.at(1)
+
+  //  for (int i = 0; i < argc_; ++i) mode_params_.append(argv_[i]);
+
+  //  mode_params_.pop_front();  // Удаляем имя самой программы.
+
+  //  // Заголовок задали?
+  //  if (mode_params_.length() > 1 && mode_params_.at(0).length() > 1) {
+  //    title_ = mode_params_.at(0);
+  //    mode_params_.pop_front();
+  //  } else {
+  //    title_ = "guify";
+  //  }
+
+  //  if (mode_params_.length() == 0) {
+  //    config_error_ = "No arguments provided!";
+  //    return;
+  //  }
+
+  //  QChar mode = mode_params_.at(0).at(0);
+  //  mode_params_.pop_front();
+
+  //  QString modes = "DPBOM";
+  //  if (!modes.contains(mode)) {
+  //    config_error_ = "Unknown mode (" + QString(mode) + ")!";
+  //    return;
+  //  }
+
+  //  switch (mode.toLatin1()) {
+  //    case 'D':
+  //      setup_ = ModeDialog();
+  //      mode_ = Mode::kDialog;
+  //      break;
+  //    case 'P':
+  //      setup_ = ModeProcess();
+  //      mode_ = Mode::kProcess;
+  //      break;
+  //    case 'B':
+  //      mode_ = Mode::kProgress;
+  //      break;
+  //    case 'O':
+  //      mode_ = Mode::kOSD;
+  //      break;
+  //    case 'M':
+  //      mode_ = Mode::kMenu;
+  //      break;
+  //  }
 }
 
 Cfg::~Cfg() {}
 
-void* Cfg::ModeDialog() {
+QVariant Cfg::ConfigureDialogVariable(const QStringList& args) {
   const QString keys = "IRCDF";
   auto char_to_enum = [this](char c) {
     switch (c) {
       case 'I':
-        return Cfg::ModeDialog::kInput;
+        return Cfg::ConfigureDialogVariable::kInput;
       case 'R':
-        return Cfg::ModeDialog::kRadio;
+        return Cfg::ConfigureDialogVariable::kRadio;
       case 'C':
-        return Cfg::ModeDialog::kCheck;
+        return Cfg::ConfigureDialogVariable::kCheck;
       case 'D':
-        return Cfg::ModeDialog::kDir;
+        return Cfg::ConfigureDialogVariable::kDir;
       case 'F':
-        return Cfg::ModeDialog::kFile;
+        return Cfg::ConfigureDialogVariable::kFile;
       default:
         this->config_error_ = "Unknown dialog mode (" + QString(c) + ")!";
-        return static_cast<enum ModeDialog>(c);
+        return static_cast<enum ConfigureDialogVariable>(c);
     }
   };
   QVector<DialogEntry> setup;
   QStringList buf;
-  for (auto it = mode_params_.rbegin(); it != mode_params_.rend(); ++it) {
+  for (auto it = args.rbegin(); it != args.rend(); ++it) {
     const QString param = *it;
     if (param.size() == 1 && keys.contains(param)) {
       if (buf.size() == 0) {
         qDebug() << "buf empty, param = " + param;
-        return nullptr;
+        return QVariant();
       }
-      enum Cfg::ModeDialog type = char_to_enum(param.at(0).toLatin1());
+      enum Cfg::ConfigureDialogVariable type =
+          char_to_enum(param.at(0).toLatin1());
       const QString title = buf.takeFirst();
       const QStringList params = buf;
       setup.push_front(DialogEntry{type, title, params});
@@ -98,8 +174,8 @@ void* Cfg::ModeDialog() {
     }
     buf.push_front(param);
   }
-  if (setup.size() == 0) return nullptr;
-  return new Dialog{setup};
+  if (setup.size() == 0) return QVariant();
+  return QVariant::fromValue(setup);
 }
 
 void* Cfg::ModeProcess() {
@@ -118,3 +194,5 @@ void* Cfg::ModeProcess() {
   }
   return new Process{cfg};
 }
+
+void Cfg::ApplyAfterShown(QWidget& w) { w.move(100, 100); }

@@ -24,35 +24,35 @@
 #include <QWidget>
 
 MainWindowProcess::MainWindowProcess(Cfg* cfg) : MainWindow() {
-  const auto setup = static_cast<Cfg::Process*>(cfg->Setup());
-  setWindowTitle(setup->binary);
+  //  const auto setup = static_cast<Cfg::Process*>(cfg->Variable());
+  //  setWindowTitle(setup->binary);
 
-  QProcessEnvironment env;
-  for (const auto& e : qAsConst(setup->environment))
-    env.insert(e.first, e.second);
-  QProcess* p = new QProcess;
-  p->setProcessEnvironment(env);
-  p->setProgram(setup->binary);
-  p->setArguments(setup->arguments);
-  p->start();
+  //  QProcessEnvironment env;
+  //  for (const auto& e : qAsConst(setup->environment))
+  //    env.insert(e.first, e.second);
+  //  QProcess* p = new QProcess;
+  //  p->setProcessEnvironment(env);
+  //  p->setProgram(setup->binary);
+  //  p->setArguments(setup->arguments);
+  //  p->start();
 
-  QPlainTextEdit* te = new QPlainTextEdit;
-  te->setMaximumBlockCount(1024);
-  connect(p, &QProcess::readyReadStandardOutput, [te, p]() {
-    const QString line = p->readAllStandardOutput().trimmed();
-    te->appendPlainText(line);
-    fprintf(stdout, "%s\n", line.toStdString().c_str());
-  });
-  connect(p, &QProcess::readyReadStandardError, [te, p]() {
-    const QString line = p->readAllStandardError().trimmed();
-    te->appendHtml("<font color='red'>" + line + "</font>");
-    fprintf(stderr, "%s\n", line.toStdString().c_str());
-  });
-  this->setCentralWidget(te);
+  //  QPlainTextEdit* te = new QPlainTextEdit;
+  //  te->setMaximumBlockCount(1024);
+  //  connect(p, &QProcess::readyReadStandardOutput, [te, p]() {
+  //    const QString line = p->readAllStandardOutput().trimmed();
+  //    te->appendPlainText(line);
+  //    fprintf(stdout, "%s\n", line.toStdString().c_str());
+  //  });
+  //  connect(p, &QProcess::readyReadStandardError, [te, p]() {
+  //    const QString line = p->readAllStandardError().trimmed();
+  //    te->appendHtml("<font color='red'>" + line + "</font>");
+  //    fprintf(stderr, "%s\n", line.toStdString().c_str());
+  //  });
+  //  this->setCentralWidget(te);
 
-  connect(p,
-    static_cast<void(QProcess::*)(int, QProcess::ExitStatus)>
-      (&QProcess::finished), [](){QGuiApplication::quit();});
+  //  connect(p,
+  //    static_cast<void(QProcess::*)(int, QProcess::ExitStatus)>
+  //      (&QProcess::finished), [](){QGuiApplication::quit();});
 }
 
 void MainWindowProcess::NumberIndexChanged(int number, int index) {
@@ -65,9 +65,8 @@ void MainWindowProcess::NumberIndexChanged(int number, int index) {
   if (number > 1) {
     w /= 2;
     const int half = number / 2;
-    const int column_rows = number % 2 == 0 ? half
-                            : index < half  ? half
-                                            : half + 1;
+    const int column_rows =
+        number % 2 == 0 ? half : index < half ? half : half + 1;
 
     h /= column_rows;
     x = index < half ?: x + w;

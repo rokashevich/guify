@@ -1,18 +1,13 @@
 #include "gui.hpp"
 
-#include <QCoreApplication>
 #include <QDebug>
 
 #include "mainwindowdialog.hpp"
+#include "mainwindowosd.hpp"
 #include "mainwindowprocess.hpp"
 #include "mainwindowusage.hpp"
 
 Gui::Gui(Cfg* cfg) : QObject() {
-  QCoreApplication::setApplicationName("guify");
-  QCoreApplication::setOrganizationName(cfg->Title());
-
-  application_ = new QApplication(cfg->Argc(), cfg->Argv());
-
   if (cfg->ConfigError().length() > 0)
     mainwindow_ = new MainWindowUsage(cfg);
   else {
@@ -23,9 +18,10 @@ Gui::Gui(Cfg* cfg) : QObject() {
       case Cfg::Mode::kProcess:
         mainwindow_ = new MainWindowProcess(cfg);
         break;
-      case Cfg::Mode::kProgressBar:
+      case Cfg::Mode::kProgress:
         break;
       case Cfg::Mode::kOSD:
+        mainwindow_ = new MainWindowOsd(cfg);
         break;
       case Cfg::Mode::kMenu:
         break;
@@ -35,12 +31,13 @@ Gui::Gui(Cfg* cfg) : QObject() {
   }
 
   mainwindow_->show();
-  QObject::connect(this, &Gui::NumberIndexChanged, mainwindow_,
-                   &MainWindow::NumberIndexChanged);
+  cfg->ApplyAfterShown(*mainwindow_);
+  //  QObject::connect(this, &Gui::NumberIndexChanged, mainwindow_,
+  //                   &MainWindow::NumberIndexChanged);
 }
 
 void Gui::SwarmCallback(int number, int index) {
   emit NumberIndexChanged(number, index);
 }
 
-int Gui::Run() { return application_->exec(); }
+int Gui::Run() { return 1; }

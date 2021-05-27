@@ -2,6 +2,7 @@
 #include <QApplication>
 #include <QMainWindow>
 #include <QObject>
+#include <QWidget>
 
 #include "cfg.hpp"
 #include "mainwindow.hpp"
@@ -9,8 +10,7 @@
 class Gui : public QObject {
   Q_OBJECT
 
-  QApplication* application_;
-  MainWindow* mainwindow_;
+  QWidget* mainwindow_;
 
  public:
   Gui(Cfg*);

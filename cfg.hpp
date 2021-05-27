@@ -8,24 +8,24 @@
 //   - наибольшее кол-во вариантов в панели.
 // Эти поля будут нужны для красивой компоновки виджетов в классе Xxdialog.
 
+#include <QCommandLineParser>
+#include <QCoreApplication>
 #include <QList>
 #include <QPair>
 #include <QSet>
 #include <QStringList>
+#include <QVariant>
 #include <QVector>
-
+#include <QWidget>
 class Cfg {
  public:
-  enum class Mode { kDialog, kProcess, kProgressBar, kOSD, kMenu };
+  enum class Mode { kDialog, kOSD, kProcess, kProgress, kMenu, kHelp };
 
-  enum class ModeDialog { kInput, kRadio, kCheck, kDir, kFile };
+  enum class ConfigureDialogVariable { kInput, kRadio, kCheck, kDir, kFile };
   struct DialogEntry {
-    ModeDialog type;
+    ConfigureDialogVariable type;
     QString title;
     QStringList params;
-  };
-  struct Dialog {
-    QVector<DialogEntry> params;
   };
   struct Process {
     QSet<QPair<QString, QString>> environment;
@@ -34,23 +34,23 @@ class Cfg {
   };
 
  private:
-  int argc_;
-  char** argv_;
-  QStringList mode_params_;
-  Mode mode_;
-  void* setup_;
+  QCommandLineParser parser_;
   QString title_;
+  Mode mode_;
+  QStringList mode_params_;
+
+  QVariant variable_;
+
   QString config_error_;
 
  public:
-  Cfg(int argc, char** argv);
+  Cfg(const QStringList& arguments);
   ~Cfg();
-  void* Setup() { return setup_; }
+  QVariant Variable() { return variable_; }
   Mode mode() { return mode_; }
-  int& Argc() { return argc_; }
-  char** Argv() { return argv_; }
-  void* ModeDialog();
+  QVariant ConfigureDialogVariable(const QStringList&);
   void* ModeProcess();
   QString Title() { return title_; }
   QString ConfigError() { return config_error_; }
+  void ApplyAfterShown(QWidget&);
 };

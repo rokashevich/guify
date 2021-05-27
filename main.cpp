@@ -4,6 +4,7 @@
 #include <sys/types.h>
 #include <sys/un.h>
 
+#include <QApplication>
 #include <algorithm>
 #include <csignal>
 #include <cstring>
@@ -22,10 +23,11 @@
 #include "unused.hpp"
 
 int main(int argc, char** argv) {
-  Cfg* cfg = new Cfg(argc, argv);
-  Gui* gui = new Gui(cfg);
-  Swarm& swarm = Swarm::Singleton();
-  swarm.Start(std::bind(&Gui::SwarmCallback, gui, std::placeholders::_1,
-                        std::placeholders::_2));
-  return gui->Run();
+  QApplication app(argc, argv);
+  Cfg* cfg = new Cfg(app.arguments());
+  Gui gui(cfg);
+  // Swarm& swarm = Swarm::Singleton();
+  // swarm.Start(std::bind(&Gui::SwarmCallback, gui, std::placeholders::_1,
+  //                      std::placeholders::_2));
+  return app.exec();
 }
