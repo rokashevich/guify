@@ -7,6 +7,7 @@
 #include <QCommandLineOption>
 #include <QCommandLineParser>
 #include <QCoreApplication>
+#include <QCursor>
 #include <QDebug>
 #include <QGuiApplication>
 #include <QMap>
@@ -45,7 +46,7 @@ Cfg::Cfg(const QStringList& arguments) : config_error_("") {
   } else if (mode == "osd") {
     mode_ = Cfg::Mode::kOSD;
     parser_.clearPositionalArguments();
-    parser_.addPositionalArgument("dialog", "Construct dialog", "I R B D F");
+    parser_.addPositionalArgument("osd", "Onscreen message label");
     parser_.addOption({"text", "Message to display", "text"});
     parser_.addOption(geometryOption);
     parser_.process(arguments);
@@ -208,7 +209,10 @@ void Cfg::ApplyAfterShown(QWidget& w) {
       parser_.optionNames().contains("geometry") && parser_.isSet("geometry")
           ? parser_.value("geometry")
           : "";
-  const QRect screenRect = w.screen()->availableGeometry();
+
+  QScreen* screen = qApp->screenAt(QCursor::pos());
+  if (!screen) screen = w.screen();
+  const QRect screenRect = screen->availableGeometry();
   const QSize widget(w.size());
   const QSize availableSize(screenRect.width() - widget.width(),
                             screenRect.height() - widget.height());
