@@ -3,11 +3,17 @@
 #include <pwd.h>
 #include <unistd.h>
 
+#include <QChar>
 #include <QCommandLineOption>
 #include <QCommandLineParser>
 #include <QCoreApplication>
 #include <QDebug>
+#include <QGuiApplication>
 #include <QMap>
+#include <QPoint>
+#include <QRect>
+#include <QScreen>
+#include <QSize>
 #include <QString>
 #include <QVector>
 #include <algorithm>
@@ -25,13 +31,14 @@ Cfg::Cfg(const QStringList& arguments) : config_error_("") {
 
   const QCommandLineOption titleOption{"title", "Application title (optional)",
                                        "string"};
-  const QCommandLineOption positionOption{"position", "Placement (optional)",
-                                          "T/B/L/R/M"};
+  const QCommandLineOption geometryOption{"geometry", "Placement (optional)",
+                                          "T/B/L/R"};
   if (mode == "dialog") {
     mode_ = Cfg::Mode::kDialog;
     parser_.clearPositionalArguments();
     parser_.addPositionalArgument("dialog", "Construct dialog", "I R B D F");
     parser_.addOption(titleOption);
+    parser_.addOption(geometryOption);
     parser_.process(arguments);
     variable_ =
         ConfigureDialogVariable(parser_.positionalArguments().sliced(1));
@@ -40,6 +47,7 @@ Cfg::Cfg(const QStringList& arguments) : config_error_("") {
     parser_.clearPositionalArguments();
     parser_.addPositionalArgument("dialog", "Construct dialog", "I R B D F");
     parser_.addOption({"text", "Message to display", "text"});
+    parser_.addOption(geometryOption);
     parser_.process(arguments);
     const QStringList args = parser_.positionalArguments().sliced(1);
     variable_ = parser_.value("text");
@@ -195,4 +203,31 @@ void* Cfg::ModeProcess() {
   return new Process{cfg};
 }
 
-void Cfg::ApplyAfterShown(QWidget& w) { w.move(100, 100); }
+void Cfg::ApplyAfterShown(QWidget& w) {
+  const QString geometry =
+      parser_.optionNames().contains("geometry") && parser_.isSet("geometry")
+          ? parser_.value("geometry")
+          : "";
+  const QRect screenRect = w.screen()->availableGeometry();
+  const QSize widget(w.size());
+  const QSize availableSize(screenRect.width() - widget.width(),
+                            screenRect.height() - widget.height());
+  const QPoint middle(screenRect.x() + availableSize.width() / 2,
+                      screenRect.y() + availableSize.height() / 2);
+  const int half = 50;
+  QPoint shift(0, 0);
+  for (QChar c : geometry) {
+    if (c == 'T') {
+      shift.setY(shift.y() - half);
+    } else if (c == 'B') {
+      shift.setY(shift.y() + half);
+    } else if (c == 'L') {
+      shift.setX(shift.x() - half);
+    } else if (c == 'R') {
+      shift.setX(shift.x() + half);
+    }
+  }
+  QPoint move(middle.x() + availableSize.width() * shift.x() / 100,
+              middle.y() + availableSize.height() * shift.y() / 100);
+  w.move(move.x(), move.y());
+}
