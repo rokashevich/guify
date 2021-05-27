@@ -5,5 +5,5 @@
 
 class MainWindowDialog : public MainWindow {
  public:
-  MainWindowDialog(Cfg* cfg);
+  MainWindowDialog(Cfg& cfg);
 };

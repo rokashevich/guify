@@ -18,17 +18,17 @@
 #include <QVector>
 #include <QWidget>
 
-MainWindowDialog::MainWindowDialog(Cfg* cfg) : MainWindow() {
+MainWindowDialog::MainWindowDialog(Cfg& cfg) : MainWindow() {
   //  const auto setup = static_cast<Cfg::Dialog*>(cfg->Variable());
   //  const auto params =
   //  static_cast<QVector<Cfg::DialogEntry>*>(&setup->params);
 
-  setWindowTitle(cfg->Title());  // Заголовок пустой для чистоты UI.
+  setWindowTitle(cfg.Title());  // Заголовок пустой для чистоты UI.
 
   QGridLayout* gl = new QGridLayout;
   int row = 0;
   QVector<Cfg::DialogEntry> params =
-      cfg->Variable().value<QVector<Cfg::DialogEntry>>();
+      cfg.Variable().value<QVector<Cfg::DialogEntry>>();
   for (const auto& a : params) {
     const auto type = a.type;
     const auto title = a.title;

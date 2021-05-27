@@ -18,8 +18,8 @@
 #include <QVector>
 #include <QWidget>
 
-MainWindowOsd::MainWindowOsd(Cfg* cfg) : QLabel() {
-  this->setText(cfg->Variable().toString());
+MainWindowOsd::MainWindowOsd(Cfg& cfg) : QLabel() {
+  this->setText(cfg.Variable().toString());
   this->setStyleSheet("color:white;background:red;padding: 2px 2px 2px 2px;");
   this->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowSystemMenuHint |
                        Qt::X11BypassWindowManagerHint |

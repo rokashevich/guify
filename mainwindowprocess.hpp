@@ -5,6 +5,6 @@
 
 class MainWindowProcess : public MainWindow {
  public:
-  MainWindowProcess(Cfg* cfg);
+  MainWindowProcess(Cfg& cfg);
   void NumberIndexChanged(int, int) override;
 };

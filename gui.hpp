@@ -13,7 +13,7 @@ class Gui : public QObject {
   QWidget* mainwindow_;
 
  public:
-  Gui(Cfg*);
+  Gui(Cfg&);
   ~Gui(){};
   int Run();
   void SwarmCallback(int, int);

@@ -24,7 +24,7 @@
 
 int main(int argc, char** argv) {
   QApplication app(argc, argv);
-  Cfg* cfg = new Cfg(app.arguments());
+  Cfg cfg(app.arguments());
   Gui gui(cfg);
   // Swarm& swarm = Swarm::Singleton();
   // swarm.Start(std::bind(&Gui::SwarmCallback, gui, std::placeholders::_1,

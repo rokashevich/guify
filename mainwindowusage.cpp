@@ -2,9 +2,9 @@
 
 #include <QTextEdit>
 
-MainWindowUsage::MainWindowUsage(Cfg* cfg) : MainWindow() {
+MainWindowUsage::MainWindowUsage(Cfg& cfg) : MainWindow() {
   QTextEdit* te = new QTextEdit;
-  te->setText(cfg->ConfigError() + R"(
+  te->setText(cfg.ConfigError() + R"(
 
 Usage:
 guify [title] { D | P | B | O | M }

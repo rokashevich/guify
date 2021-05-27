@@ -23,7 +23,7 @@
 #include <QVector>
 #include <QWidget>
 
-MainWindowProcess::MainWindowProcess(Cfg* cfg) : MainWindow() {
+MainWindowProcess::MainWindowProcess(Cfg& cfg) : MainWindow() {
   //  const auto setup = static_cast<Cfg::Process*>(cfg->Variable());
   //  setWindowTitle(setup->binary);
 

@@ -7,11 +7,11 @@
 #include "mainwindowprocess.hpp"
 #include "mainwindowusage.hpp"
 
-Gui::Gui(Cfg* cfg) : QObject() {
-  if (cfg->ConfigError().length() > 0)
+Gui::Gui(Cfg& cfg) : QObject() {
+  if (cfg.ConfigError().length() > 0)
     mainwindow_ = new MainWindowUsage(cfg);
   else {
-    switch (cfg->mode()) {
+    switch (cfg.mode()) {
       case Cfg::Mode::kDialog:
         mainwindow_ = new MainWindowDialog(cfg);
         break;
@@ -31,7 +31,7 @@ Gui::Gui(Cfg* cfg) : QObject() {
   }
 
   mainwindow_->show();
-  cfg->ApplyAfterShown(*mainwindow_);
+  cfg.ApplyAfterShown(*mainwindow_);
   //  QObject::connect(this, &Gui::NumberIndexChanged, mainwindow_,
   //                   &MainWindow::NumberIndexChanged);
 }

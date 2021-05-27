@@ -7,5 +7,5 @@
 
 class MainWindowOsd : public QLabel {
  public:
-  MainWindowOsd(Cfg* cfg);
+  MainWindowOsd(Cfg& cfg);
 };
