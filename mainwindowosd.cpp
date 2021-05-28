@@ -9,6 +9,7 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
+#include <QObject>
 #include <QPushButton>
 #include <QRadioButton>
 #include <QSettings>

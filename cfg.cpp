@@ -11,6 +11,7 @@
 #include <QDebug>
 #include <QGuiApplication>
 #include <QMap>
+#include <QObject>
 #include <QPoint>
 #include <QRect>
 #include <QScreen>
@@ -18,11 +19,14 @@
 #include <QString>
 #include <QVector>
 #include <algorithm>
+#include <process.hpp>
 #include <string>
 #include <tuple>
 #include <vector>
 
-Cfg::Cfg(const QStringList& arguments) : config_error_("") {
+#include "process.hpp"
+
+Cfg::Cfg(const QStringList& arguments) : QObject(), config_error_("") {
   QCoreApplication::setApplicationName("guify");
   parser_.addHelpOption();
   parser_.addPositionalArgument("mode", "dialog/osd/process/progress/bar/menu");
@@ -34,6 +38,8 @@ Cfg::Cfg(const QStringList& arguments) : config_error_("") {
                                        "string"};
   const QCommandLineOption geometryOption{"geometry", "Placement (optional)",
                                           "T/B/L/R"};
+  const QCommandLineOption shOption{"sh", "Interpet command with sh -c",
+                                    "command"};
   if (mode == "dialog") {
     mode_ = Cfg::Mode::kDialog;
     parser_.clearPositionalArguments();
@@ -49,6 +55,7 @@ Cfg::Cfg(const QStringList& arguments) : config_error_("") {
     parser_.addPositionalArgument("osd", "Onscreen message label");
     parser_.addOption({"text", "Message to display", "text"});
     parser_.addOption(geometryOption);
+    parser_.addOption(shOption);
     parser_.process(arguments);
     const QStringList args = parser_.positionalArguments().sliced(1);
     variable_ = parser_.value("text");
@@ -145,6 +152,14 @@ Cfg::Cfg(const QStringList& arguments) : config_error_("") {
 
 Cfg::~Cfg() {}
 
+void Cfg::Run() {
+  if (parser_.optionNames().contains("sh") && parser_.isSet("sh")) {
+    p_ = new Process(parser_.value("sh"));
+    connect(p_, &Process::finished,
+            [this](int exitCode) { emit processFinished(exitCode); });
+  }
+}
+
 QVariant Cfg::ConfigureDialogVariable(const QStringList& args) {
   const QString keys = "IRCDF";
   auto char_to_enum = [this](char c) {
@@ -185,23 +200,6 @@ QVariant Cfg::ConfigureDialogVariable(const QStringList& args) {
   }
   if (setup.size() == 0) return QVariant();
   return QVariant::fromValue(setup);
-}
-
-void* Cfg::ModeProcess() {
-  Process cfg;
-  for (const auto& param : mode_params_) {
-    if (param.contains('=') && cfg.binary.isEmpty()) {
-      auto parts = param.split('=');
-      auto env_name = parts.at(0);
-      auto env_val = parts.at(1);
-      cfg.environment.insert(qMakePair(env_name, env_val));
-    } else if (cfg.binary.isEmpty()) {
-      cfg.binary = param;
-    } else {
-      cfg.arguments.append(param);
-    }
-  }
-  return new Process{cfg};
 }
 
 void Cfg::ApplyAfterShown(QWidget& w) {

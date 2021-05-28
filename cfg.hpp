@@ -11,13 +11,20 @@
 #include <QCommandLineParser>
 #include <QCoreApplication>
 #include <QList>
+#include <QObject>
 #include <QPair>
 #include <QSet>
 #include <QStringList>
 #include <QVariant>
 #include <QVector>
 #include <QWidget>
-class Cfg {
+
+#include "process.hpp"
+class Cfg : public QObject {
+  Q_OBJECT
+ signals:
+  void processFinished(int exitCode);
+
  public:
   enum class Mode { kDialog, kOSD, kProcess, kProgress, kMenu, kHelp };
 
@@ -27,13 +34,9 @@ class Cfg {
     QString title;
     QStringList params;
   };
-  struct Process {
-    QSet<QPair<QString, QString>> environment;
-    QString binary;
-    QStringList arguments;
-  };
 
  private:
+  Process* p_;
   QCommandLineParser parser_;
   QString title_;
   Mode mode_;
@@ -49,8 +52,8 @@ class Cfg {
   QVariant Variable() { return variable_; }
   Mode mode() { return mode_; }
   QVariant ConfigureDialogVariable(const QStringList&);
-  void* ModeProcess();
   QString Title() { return title_; }
   QString ConfigError() { return config_error_; }
   void ApplyAfterShown(QWidget&);
+  void Run();
 };
