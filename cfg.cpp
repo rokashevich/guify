@@ -59,7 +59,6 @@ Cfg::Cfg(const QStringList& arguments) : QObject(), config_error_("") {
     parser_.process(arguments);
     const QStringList args = parser_.positionalArguments().sliced(1);
     variable_ = parser_.value("text");
-
   } else {
     parser_.showHelp();
   }
@@ -68,6 +67,12 @@ Cfg::Cfg(const QStringList& arguments) : QObject(), config_error_("") {
                ? parser_.value("title")
                : "Guify";
   QCoreApplication::setOrganizationName(title_);
+
+  if (parser_.optionNames().contains("sh") && parser_.isSet("sh")) {
+    p_ = new Process(parser_.value("sh"));
+    connect(p_, &Process::finished,
+            [this](int exitCode) { emit processFinished(exitCode); });
+  }
 
   //  parser_.addPositionalArgument("mode",
   //  "dialog/osd/process/progress/bar/menu"); parser_.addOptions({

@@ -28,9 +28,9 @@ int main(int argc, char** argv) {
 
   Cfg cfg(app.arguments());
   Gui gui(cfg);
-  cfg.Run();
-  QObject::connect(&cfg, &Cfg::processFinished,
-                   [&app](int exitCode) { app.exit(exitCode); });
+  //  cfg.Run();
+  //  QObject::connect(&gui, &Gui::processFinished,
+  //                   [&app](int exitCode) { app.exit(exitCode); });
 
   // Swarm& swarm = Swarm::Singleton();
   // swarm.Start(std::bind(&Gui::SwarmCallback, gui, std::placeholders::_1,

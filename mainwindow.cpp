@@ -2,7 +2,9 @@
 
 #include <QDebug>
 
-MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {}
+MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
+  this->resize(0, 0);
+}
 
 void MainWindow::NumberIndexChanged(int, int) {
   // Для переопределения в наследнике, если надо.

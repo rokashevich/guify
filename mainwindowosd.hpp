@@ -6,8 +6,10 @@
 #include "cfg.hpp"
 #include "mainwindow.hpp"
 
-class MainWindowOsd : public QLabel {
+class MainWindowOsd : public MainWindow {
   Q_OBJECT
+  QLabel* label_;
+
  public:
   MainWindowOsd(Cfg& cfg);
 };

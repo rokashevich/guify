@@ -19,10 +19,15 @@
 #include <QVector>
 #include <QWidget>
 
-MainWindowOsd::MainWindowOsd(Cfg& cfg) : QLabel() {
-  this->setText(cfg.Variable().toString());
-  this->setStyleSheet("color:white;background:red;padding: 2px 2px 2px 2px;");
+MainWindowOsd::MainWindowOsd(Cfg& cfg) : MainWindow() {
   this->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowSystemMenuHint |
                        Qt::X11BypassWindowManagerHint |
                        Qt::WindowStaysOnTopHint);
+  label_ = new QLabel(cfg.Variable().toString());
+  label_->setStyleSheet("color:white;background:red;padding: 2px 2px 2px 2px;");
+  this->setCentralWidget(label_);
+  connect(&cfg, &Cfg::processFinished, [this](int) {
+    this->close();
+    emit this->closed();
+  });
 }
