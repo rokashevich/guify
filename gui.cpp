@@ -4,7 +4,7 @@
 
 #include "mainwindowdialog.hpp"
 #include "mainwindowosd.hpp"
-#include "mainwindowprocess.hpp"
+#include "mainwindowpanel.hpp"
 #include "mainwindowusage.hpp"
 
 Gui::Gui(Cfg& cfg) : QObject() {
@@ -15,15 +15,11 @@ Gui::Gui(Cfg& cfg) : QObject() {
       case Cfg::Mode::kDialog:
         mainwindow_ = new MainWindowDialog(cfg);
         break;
-      case Cfg::Mode::kProcess:
-        mainwindow_ = new MainWindowProcess(cfg);
-        break;
-      case Cfg::Mode::kProgress:
-        break;
       case Cfg::Mode::kOSD:
         mainwindow_ = new MainWindowOsd(cfg);
         break;
-      case Cfg::Mode::kMenu:
+      case Cfg::Mode::kPanel:
+        mainwindow_ = new MainWindowPanel(cfg);
         break;
       default:
         break;

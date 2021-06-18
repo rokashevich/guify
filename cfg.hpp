@@ -26,7 +26,7 @@ class Cfg : public QObject {
   void processFinished(int exitCode);
 
  public:
-  enum class Mode { kDialog, kOSD, kProcess, kProgress, kMenu, kHelp };
+  enum class Mode { kDialog, kOSD, kPanel };
 
   enum class ConfigureDialogVariable { kInput, kRadio, kCheck, kDir, kFile };
   struct DialogEntry {

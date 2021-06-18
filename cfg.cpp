@@ -29,7 +29,7 @@
 Cfg::Cfg(const QStringList& arguments) : QObject(), config_error_("") {
   QCoreApplication::setApplicationName("guify");
   parser_.addHelpOption();
-  parser_.addPositionalArgument("mode", "dialog/osd/process/progress/bar/menu");
+  parser_.addPositionalArgument("mode", "dialog/osd/panel");
   parser_.parse(arguments);
   const QStringList args = parser_.positionalArguments();
   const QString mode = args.isEmpty() ? QString() : args.first();
@@ -59,6 +59,29 @@ Cfg::Cfg(const QStringList& arguments) : QObject(), config_error_("") {
     parser_.process(arguments);
     const QStringList args = parser_.positionalArguments().sliced(1);
     variable_ = parser_.value("text");
+  } else if (mode == "panel") {
+    // Проработка вариантов конфигурирования:
+    // guify panel --langswitcher "en|ru" --pipedmenu FILE --autobuttons DIR
+    // --pipedmenu DIR
+    mode_ = Cfg::Mode::kPanel;
+    parser_.clearPositionalArguments();
+    parser_.addOption({"langswitcher",
+                       "Generate panels based on a preapared folder", "path"});
+    parser_.addOption(
+        {"autobuttons", "Generate panels based on a preapared folder", "path"});
+    parser_.addOption(
+        {"pipedmenu", "Generate panels based on a preapared folder", "path"});
+    parser_.addOption(geometryOption);
+    parser_.process(arguments);
+    QList<QVariant> variable;
+    QMap<QString, int> counter;
+    for (auto optionName : parser_.optionNames()) {
+      const int index = counter.contains(optionName) ? counter[optionName] : 0;
+      counter.insert(optionName, index + 1);
+      QStringList variant{optionName, parser_.values(optionName).at(index)};
+      variable.push_back(variant);
+    }
+    variable_ = variable;
   } else {
     parser_.showHelp();
   }
