@@ -35,16 +35,16 @@ MainWindowDialog::MainWindowDialog(Cfg& cfg) : MainWindow() {
     const auto params = a.params;
     QHBoxLayout* hbl = new QHBoxLayout;
     switch (type) {
-      case Cfg::ConfigureDialogVariable::kInput:
+      case Cfg::DialogEntryType::kInput:
         hbl->addWidget(new QLineEdit(params.at(0)));
         break;
-      case Cfg::ConfigureDialogVariable::kRadio:
+      case Cfg::DialogEntryType::kRadio:
         for (const auto& p : params) hbl->addWidget(new QRadioButton(p));
         break;
-      case Cfg::ConfigureDialogVariable::kCheck:
+      case Cfg::DialogEntryType::kCheck:
         for (const auto& p : params) hbl->addWidget(new QCheckBox(p));
         break;
-      case Cfg::ConfigureDialogVariable::kDir: {
+      case Cfg::DialogEntryType::kDir: {
         QString initial_dir =
             QStandardPaths::standardLocations(QStandardPaths::HomeLocation)
                 .at(0);
@@ -66,7 +66,7 @@ MainWindowDialog::MainWindowDialog(Cfg& cfg) : MainWindow() {
         });
         hbl->addWidget(b);
       } break;
-      case Cfg::ConfigureDialogVariable::kFile: {
+      case Cfg::DialogEntryType::kFile: {
         const QString path = params.length() ? params.at(0) : "";
         QPushButton* b = new QPushButton(path);
         connect(b, &QPushButton::clicked, [b, path]() {

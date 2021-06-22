@@ -24,9 +24,11 @@ MainWindowPanel::MainWindowPanel(Cfg& cfg) : MainWindow() {
                        Qt::X11BypassWindowManagerHint |
                        Qt::WindowStaysOnTopHint);
   QString text;
-  for (auto panel : cfg.Variable().toList()) {
-    for (auto panels_argument : panel.toList()) {
-      text += panels_argument.toString() + " ";
+  qDebug() << cfg.Variable();
+  for (auto& variant : cfg.Variable().toList()) {
+    const Panel::Entry entry = variant.value<Panel::Entry>();
+    if (entry.type == Panel::Type::kButton) {
+      text += entry.data.toString();
     }
   }
   label_ = new QLabel{text};

@@ -20,17 +20,39 @@
 #include <QWidget>
 
 #include "process.hpp"
+
+// guify panel --langswitcher en,ru --menu FILE/DIR --button DIR
+namespace Panel {
+enum class Type { kLangSwitcher, kButton, kMenu };
+struct Entry {
+  Type type;
+  QVariant data;
+};
+};  // namespace Panel
+
+Q_DECLARE_METATYPE(Panel::Entry);
+
 class Cfg : public QObject {
   Q_OBJECT
+
+  const QStringList arguments_;
+  const QCommandLineOption titleOption_{"title", "Application title (optional)",
+                                        "string"};
+  const QCommandLineOption geometryOption_{"geometry", "Placement (optional)",
+                                           "T/B/L/R"};
+  const QCommandLineOption shOption_{"sh", "Interpet command with sh -c",
+                                     "command"};
+  QString ConfigurePanel();
+  void AddPanelOptions();
  signals:
   void processFinished(int exitCode);
 
  public:
   enum class Mode { kDialog, kOSD, kPanel };
 
-  enum class ConfigureDialogVariable { kInput, kRadio, kCheck, kDir, kFile };
+  enum class DialogEntryType { kInput, kRadio, kCheck, kDir, kFile };
   struct DialogEntry {
-    ConfigureDialogVariable type;
+    DialogEntryType type;
     QString title;
     QStringList params;
   };
@@ -51,7 +73,7 @@ class Cfg : public QObject {
   ~Cfg();
   QVariant Variable() { return variable_; }
   Mode mode() { return mode_; }
-  QVariant ConfigureDialogVariable(const QStringList&);
+  QVariant DialogEntryType(const QStringList&);
   QString Title() { return title_; }
   QString ConfigError() { return config_error_; }
   void ApplyAfterShown(QWidget&);

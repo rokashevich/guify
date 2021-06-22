@@ -9,6 +9,7 @@
 #include <QCoreApplication>
 #include <QCursor>
 #include <QDebug>
+#include <QDir>
 #include <QGuiApplication>
 #include <QMap>
 #include <QObject>
@@ -26,63 +27,43 @@
 
 #include "process.hpp"
 
-Cfg::Cfg(const QStringList& arguments) : QObject(), config_error_("") {
+Cfg::Cfg(const QStringList& arguments)
+    : QObject(), arguments_{arguments}, config_error_("") {
   QCoreApplication::setApplicationName("guify");
   parser_.addHelpOption();
   parser_.addPositionalArgument("mode", "dialog/osd/panel");
   parser_.parse(arguments);
   const QStringList args = parser_.positionalArguments();
   const QString mode = args.isEmpty() ? QString() : args.first();
-
-  const QCommandLineOption titleOption{"title", "Application title (optional)",
-                                       "string"};
-  const QCommandLineOption geometryOption{"geometry", "Placement (optional)",
-                                          "T/B/L/R"};
-  const QCommandLineOption shOption{"sh", "Interpet command with sh -c",
-                                    "command"};
+  QString errorMessage = "";
   if (mode == "dialog") {
     mode_ = Cfg::Mode::kDialog;
     parser_.clearPositionalArguments();
     parser_.addPositionalArgument("dialog", "Construct dialog", "I R B D F");
-    parser_.addOption(titleOption);
-    parser_.addOption(geometryOption);
+    parser_.addOption(titleOption_);
+    parser_.addOption(geometryOption_);
     parser_.process(arguments);
-    variable_ =
-        ConfigureDialogVariable(parser_.positionalArguments().sliced(1));
+    variable_ = DialogEntryType(parser_.positionalArguments().sliced(1));
   } else if (mode == "osd") {
     mode_ = Cfg::Mode::kOSD;
     parser_.clearPositionalArguments();
     parser_.addPositionalArgument("osd", "Onscreen message label");
     parser_.addOption({"text", "Message to display", "text"});
-    parser_.addOption(geometryOption);
-    parser_.addOption(shOption);
+    parser_.addOption(geometryOption_);
+    parser_.addOption(shOption_);
     parser_.process(arguments);
     const QStringList args = parser_.positionalArguments().sliced(1);
     variable_ = parser_.value("text");
   } else if (mode == "panel") {
-    // Проработка вариантов конфигурирования:
-    // guify panel --langswitcher "en|ru" --pipedmenu FILE --autobuttons DIR
-    // --pipedmenu DIR
-    mode_ = Cfg::Mode::kPanel;
-    parser_.clearPositionalArguments();
-    parser_.addOption({"langswitcher",
-                       "Generate panels based on a preapared folder", "path"});
-    parser_.addOption(
-        {"autobuttons", "Generate panels based on a preapared folder", "path"});
-    parser_.addOption(
-        {"pipedmenu", "Generate panels based on a preapared folder", "path"});
-    parser_.addOption(geometryOption);
-    parser_.process(arguments);
-    QList<QVariant> variable;
-    QMap<QString, int> counter;
-    for (auto optionName : parser_.optionNames()) {
-      const int index = counter.contains(optionName) ? counter[optionName] : 0;
-      counter.insert(optionName, index + 1);
-      QStringList variant{optionName, parser_.values(optionName).at(index)};
-      variable.push_back(variant);
-    }
-    variable_ = variable;
+    errorMessage = ConfigurePanel();
   } else {
+    errorMessage = "Bad mode `" + mode + "`";
+  }
+
+  if (!errorMessage.isEmpty()) {
+    // TODO В случае обнаружения ошибок конфигурирования прокидывать их в gui
+    // для показа.
+    qWarning() << errorMessage;
     parser_.showHelp();
   }
 
@@ -180,6 +161,55 @@ Cfg::Cfg(const QStringList& arguments) : QObject(), config_error_("") {
 
 Cfg::~Cfg() {}
 
+void Cfg::AddPanelOptions() {
+  parser_.clearPositionalArguments();
+  parser_.addOption(
+      {"langswitcher", "Generate panels based on a preapared folder", "path"});
+  parser_.addOption(
+      {"button", "Generate panels based on a preapared folder", "path"});
+  parser_.addOption(
+      {"menu", "Generate panels based on a preapared folder", "path"});
+  parser_.addOption(geometryOption_);
+}
+
+QString Cfg::ConfigurePanel() {
+  mode_ = Cfg::Mode::kPanel;
+  AddPanelOptions();
+  parser_.process(arguments_);
+  QList<QVariant> variable;
+  QMap<QString, int> counter;
+  for (auto& optionName : parser_.optionNames()) {
+    const int index = counter.contains(optionName) ? counter[optionName] : 0;
+    counter.insert(optionName, index + 1);
+
+    Panel::Entry entry;
+
+    if (optionName == "langswitcher")
+      entry.type = Panel::Type::kLangSwitcher;
+    else if (optionName == "menu")
+      entry.type = Panel::Type::kMenu;
+    else if (optionName == "button")
+      entry.type = Panel::Type::kButton;
+    else
+      return "Bad option `" + optionName + "`";
+
+    QString optionParameter = parser_.values(optionName).at(index);
+    if (entry.type == Panel::Type::kButton) {
+      QDir dir{optionParameter};
+      if (!dir.exists()) return "Bad button dir `" + optionParameter + "`";
+      entry.data = dir.absolutePath();
+    } else {
+      entry.data = optionParameter;
+    }
+
+    QVariant variant;
+    variant.setValue(entry);
+    variable.push_back(variant);
+  }
+  variable_ = variable;
+  return "";
+}
+
 void Cfg::Run() {
   if (parser_.optionNames().contains("sh") && parser_.isSet("sh")) {
     p_ = new Process(parser_.value("sh"));
@@ -188,23 +218,23 @@ void Cfg::Run() {
   }
 }
 
-QVariant Cfg::ConfigureDialogVariable(const QStringList& args) {
+QVariant Cfg::DialogEntryType(const QStringList& args) {
   const QString keys = "IRCDF";
   auto char_to_enum = [this](char c) {
     switch (c) {
       case 'I':
-        return Cfg::ConfigureDialogVariable::kInput;
+        return Cfg::DialogEntryType::kInput;
       case 'R':
-        return Cfg::ConfigureDialogVariable::kRadio;
+        return Cfg::DialogEntryType::kRadio;
       case 'C':
-        return Cfg::ConfigureDialogVariable::kCheck;
+        return Cfg::DialogEntryType::kCheck;
       case 'D':
-        return Cfg::ConfigureDialogVariable::kDir;
+        return Cfg::DialogEntryType::kDir;
       case 'F':
-        return Cfg::ConfigureDialogVariable::kFile;
+        return Cfg::DialogEntryType::kFile;
       default:
         this->config_error_ = "Unknown dialog mode (" + QString(c) + ")!";
-        return static_cast<enum ConfigureDialogVariable>(c);
+        return static_cast<enum DialogEntryType>(c);
     }
   };
   QVector<DialogEntry> setup;
@@ -216,8 +246,7 @@ QVariant Cfg::ConfigureDialogVariable(const QStringList& args) {
         qDebug() << "buf empty, param = " + param;
         return QVariant();
       }
-      enum Cfg::ConfigureDialogVariable type =
-          char_to_enum(param.at(0).toLatin1());
+      enum Cfg::DialogEntryType type = char_to_enum(param.at(0).toLatin1());
       const QString title = buf.takeFirst();
       const QStringList params = buf;
       setup.push_front(DialogEntry{type, title, params});
