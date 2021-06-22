@@ -19,19 +19,26 @@
 #include <QVector>
 #include <QWidget>
 
+#include "button.hpp"
+
 MainWindowPanel::MainWindowPanel(Cfg& cfg) : MainWindow() {
   this->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowSystemMenuHint |
                        Qt::X11BypassWindowManagerHint |
                        Qt::WindowStaysOnTopHint);
-  QString text;
-  qDebug() << cfg.Variable();
+  QHBoxLayout* layout = new QHBoxLayout();
+  //  QString text;
   for (auto& variant : cfg.Variable().toList()) {
     const Panel::Entry entry = variant.value<Panel::Entry>();
     if (entry.type == Panel::Type::kButton) {
-      text += entry.data.toString();
+      Button* button = new Button(entry.data.toString());
+      layout->addWidget(button);
+    } else {
+      QLabel* label = new QLabel{entry.data.toString()};
+      layout->addWidget(label);
     }
   }
-  label_ = new QLabel{text};
-  label_->setStyleSheet("color:white;background:red;padding: 2px 2px 2px 2px;");
-  this->setCentralWidget(label_);
+
+  QWidget* window = new QWidget();
+  window->setLayout(layout);
+  this->setCentralWidget(window);
 }

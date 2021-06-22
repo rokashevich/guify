@@ -8,7 +8,6 @@
 
 class MainWindowPanel : public MainWindow {
   Q_OBJECT
-  QLabel* label_;
 
  public:
   MainWindowPanel(Cfg& cfg);
