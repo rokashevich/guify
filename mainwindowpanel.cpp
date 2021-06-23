@@ -28,21 +28,23 @@ MainWindowPanel::MainWindowPanel(Cfg& cfg) : MainWindow() {
   QHBoxLayout* layout = new QHBoxLayout();
   // Настройки получаем вида:
   // QList(
-  //  QList("langswitcher", "en,ru"),
-  //  QList("menu", "MENUFILE"), QList("button", "/path")
+  //    QList("langswitcher", "en,ru"),
+  //    QList("menu", "MENUFILE"), QList("button", "/path")
   // )
   qDebug() << cfg.Settings();
 
   for (QStringList item : cfg.Settings()) {
     const QString type = item.takeFirst();
     if (type == "button") {
-      const QString dir = item.takeFirst();
-      //      QDir dir{optionParameter};
-      //      if (!dir.exists()) return "Bad button dir `" + optionParameter +
-      //      "`"; entry.data = dir.absolutePath();
-
-      Button* button = new Button(dir);
-      layout->addWidget(button);
+      QString path = item.takeFirst();
+      QDir dir{path};
+      if (!dir.exists())
+        layout->addWidget(new QLabel("Bad directory `" + path + "`"));
+      else {
+        path = dir.absolutePath();
+        Button* button = new Button(path);
+        layout->addWidget(button);
+      }
     } else {
       const QString value = item.takeFirst();
       QLabel* label = new QLabel{type + "-" + value};
