@@ -1,12 +1,9 @@
 #pragma once
 
-// Назначение класса - распарсить аргументы командной строки.
-// Помимо проверки введённых параметров на правильность,
-// производится поиск:
-//   - самого длинного названия панели (левый столбик);
-//   - самый длинный вариант;
-//   - наибольшее кол-во вариантов в панели.
-// Эти поля будут нужны для красивой компоновки виджетов в классе Xxdialog.
+// Задача класса - проверить синтаксическую правильность аргументов командной
+// строки. Т.е. что ключи не конфликтуют и имеют нужное количество аргументов.
+// Семантическая проверка делается в конкретном классе gui! Т.е. проверки что
+// строковый аргумент - это директория и она существует и т.п.
 
 #include <QCommandLineParser>
 #include <QCoreApplication>
@@ -21,20 +18,22 @@
 
 #include "process.hpp"
 
-// guify panel --langswitcher en,ru --menu FILE/DIR --button DIR
-namespace Panel {
-enum class Type { kLangSwitcher, kButton, kMenu };
-struct Entry {
-  Type type;
-  QVariant data;
-};
-};  // namespace Panel
-
-Q_DECLARE_METATYPE(Panel::Entry);
-
 class Cfg : public QObject {
   Q_OBJECT
+ public:
+  enum class Mode { kDialog, kOSD, kPanel };
+  Cfg(const QStringList& arguments);
+  ~Cfg();
+  QVariant Variable() { return variable_; }
+  QList<QStringList> Settings() { return settings_; }
+  Mode mode() { return mode_; }
+  QVariant DialogEntryType(const QStringList&);
+  QString Title() { return title_; }
+  QString ConfigError() { return config_error_; }
+  void ApplyAfterShown(QWidget&);
+  void Run();
 
+ private:
   const QStringList arguments_;
   const QCommandLineOption titleOption_{"title", "Application title (optional)",
                                         "string"};
@@ -42,22 +41,12 @@ class Cfg : public QObject {
                                            "T/B/L/R"};
   const QCommandLineOption shOption_{"sh", "Interpet command with sh -c",
                                      "command"};
-  QString ConfigurePanel();
+  void AddDialogOptions();
   void AddPanelOptions();
- signals:
-  void processFinished(int exitCode);
-
- public:
-  enum class Mode { kDialog, kOSD, kPanel };
-
-  enum class DialogEntryType { kInput, kRadio, kCheck, kDir, kFile };
-  struct DialogEntry {
-    DialogEntryType type;
-    QString title;
-    QStringList params;
-  };
-
- private:
+  void AddOsdOptions();
+  QString ConfigureDialog();
+  QString ConfigurePanel();
+  QString ConfigureOsd();
   Process* p_;
   QCommandLineParser parser_;
   QString title_;
@@ -65,17 +54,9 @@ class Cfg : public QObject {
   QStringList mode_params_;
 
   QVariant variable_;
+  QList<QStringList> settings_;
 
   QString config_error_;
-
- public:
-  Cfg(const QStringList& arguments);
-  ~Cfg();
-  QVariant Variable() { return variable_; }
-  Mode mode() { return mode_; }
-  QVariant DialogEntryType(const QStringList&);
-  QString Title() { return title_; }
-  QString ConfigError() { return config_error_; }
-  void ApplyAfterShown(QWidget&);
-  void Run();
+ signals:
+  void processFinished(int exitCode);
 };

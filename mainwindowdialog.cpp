@@ -27,63 +27,47 @@ MainWindowDialog::MainWindowDialog(Cfg& cfg) : MainWindow() {
 
   QGridLayout* gl = new QGridLayout;
   int row = 0;
-  QVector<Cfg::DialogEntry> params =
-      cfg.Variable().value<QVector<Cfg::DialogEntry>>();
-  for (const auto& a : params) {
-    const auto type = a.type;
-    const auto title = a.title;
-    const auto params = a.params;
-    QHBoxLayout* hbl = new QHBoxLayout;
-    switch (type) {
-      case Cfg::DialogEntryType::kInput:
-        hbl->addWidget(new QLineEdit(params.at(0)));
-        break;
-      case Cfg::DialogEntryType::kRadio:
-        for (const auto& p : params) hbl->addWidget(new QRadioButton(p));
-        break;
-      case Cfg::DialogEntryType::kCheck:
-        for (const auto& p : params) hbl->addWidget(new QCheckBox(p));
-        break;
-      case Cfg::DialogEntryType::kDir: {
-        QString initial_dir =
-            QStandardPaths::standardLocations(QStandardPaths::HomeLocation)
-                .at(0);
-        if (params.length() != 0) {
-          initial_dir = params.at(0);
-        } else {
-          QSettings settings;
-          const QString s = settings.value("Dialog/kDir" + title).toString();
-          if (s.length()) initial_dir = s;
-        }
-        QPushButton* b = new QPushButton(initial_dir);
-        // Не разрешаем кнопке быть больше, чем полэкрана.
-        b->setMaximumWidth(this->AvailableWidth() / 2);
-        connect(b, &QPushButton::clicked, [b, title]() {
-          const QString changed_dir = QFileDialog::getExistingDirectory();
-          b->setText(changed_dir);
-          QSettings settings;
-          settings.setValue("Dialog/kDir" + title, changed_dir);
-        });
-        hbl->addWidget(b);
-      } break;
-      case Cfg::DialogEntryType::kFile: {
-        const QString path = params.length() ? params.at(0) : "";
-        QPushButton* b = new QPushButton(path);
-        connect(b, &QPushButton::clicked, [b, path]() {
-          b->setText(QFileDialog::getOpenFileName(Q_NULLPTR, "", path));
-        });
-        hbl->addWidget(b);
-      } break;
-      default:
-        break;
+  QList<QStringList> lines = cfg.Settings();
+  for (auto& line : lines) {
+    // В line настройки одной панели: QList("I", "Title", "Initial").
+    const QString type = line.takeFirst();   // QList("Title", "Initial").
+    const QString title = line.takeFirst();  // QList("Initial").
+    QHBoxLayout* hL = new QHBoxLayout;
+    if (type == "I") {
+      hL->addWidget(new QLineEdit(line.size() ? line.takeLast() : ""));
+    } else if (type == "R") {
+      while (line.size()) hL->addWidget(new QRadioButton(line.takeFirst()));
+    } else if (type == "C") {
+      while (line.size()) hL->addWidget(new QCheckBox(line.takeFirst()));
+    } else if (type == "D") {
+      QString dir =  // Если начальный каталог никак не задан - берём $HOME.
+          QStandardPaths::standardLocations(QStandardPaths::HomeLocation).at(0);
+      if (!line.size()) {  // Начальный каталог задали из командной строки.
+        dir = line.takeLast();
+      } else {
+        // Начальный каталог из командной строки не задан. Используем тот,
+        // который был использован в прошлый вызов программы и был автосохранён
+        // (с помощью QSettings).
+        QSettings settings;
+        const QString s = settings.value("Dialog/kDir" + title).toString();
+        if (s.length()) dir = s;
+      }
+      QPushButton* b = new QPushButton(dir);
+      // Не разрешаем кнопке быть больше, чем полэкрана.
+      b->setMaximumWidth(this->AvailableWidth() / 2);
+      connect(b, &QPushButton::clicked, [b, title]() {
+        const QString changed_dir = QFileDialog::getExistingDirectory();
+        b->setText(changed_dir);
+        QSettings settings;
+        settings.setValue("Dialog/kDir" + title, changed_dir);
+      });
+      hL->addWidget(b);
     }
-    QGroupBox* gb = new QGroupBox();
-
     // До Qt 5.14.0 есть баг - большой отступ сверху. Нейтрализуем:
     // https://bugreports.qt.io/browse/QTBUG-44056
+    QGroupBox* gb = new QGroupBox();
     gb->setStyleSheet("QGroupBox{border:0px;}");
-
-    gb->setLayout(hbl);
+    gb->setLayout(hL);
     gl->addWidget(new QLabel(title), row, 0);
     gl->addWidget(gb, row, 1);
     ++row;

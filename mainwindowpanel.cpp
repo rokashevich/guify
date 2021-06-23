@@ -26,14 +26,26 @@ MainWindowPanel::MainWindowPanel(Cfg& cfg) : MainWindow() {
                        Qt::X11BypassWindowManagerHint |
                        Qt::WindowStaysOnTopHint);
   QHBoxLayout* layout = new QHBoxLayout();
-  //  QString text;
-  for (auto& variant : cfg.Variable().toList()) {
-    const Panel::Entry entry = variant.value<Panel::Entry>();
-    if (entry.type == Panel::Type::kButton) {
-      Button* button = new Button(entry.data.toString());
+  // Настройки получаем вида:
+  // QList(
+  //  QList("langswitcher", "en,ru"),
+  //  QList("menu", "MENUFILE"), QList("button", "/path")
+  // )
+  qDebug() << cfg.Settings();
+
+  for (QStringList item : cfg.Settings()) {
+    const QString type = item.takeFirst();
+    if (type == "button") {
+      const QString dir = item.takeFirst();
+      //      QDir dir{optionParameter};
+      //      if (!dir.exists()) return "Bad button dir `" + optionParameter +
+      //      "`"; entry.data = dir.absolutePath();
+
+      Button* button = new Button(dir);
       layout->addWidget(button);
     } else {
-      QLabel* label = new QLabel{entry.data.toString()};
+      const QString value = item.takeFirst();
+      QLabel* label = new QLabel{type + "-" + value};
       layout->addWidget(label);
     }
   }
