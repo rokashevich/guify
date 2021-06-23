@@ -37,14 +37,8 @@ MainWindowPanel::MainWindowPanel(Cfg& cfg) : MainWindow() {
     const QString type = item.takeFirst();
     if (type == "button") {
       QString path = item.takeFirst();
-      QDir dir{path};
-      if (!dir.exists())
-        layout->addWidget(new QLabel("Bad directory `" + path + "`"));
-      else {
-        path = dir.absolutePath();
-        Button* button = new Button(path);
-        layout->addWidget(button);
-      }
+      Button* button = new Button(path);
+      layout->addWidget(button);
     } else {
       const QString value = item.takeFirst();
       QLabel* label = new QLabel{type + "-" + value};
