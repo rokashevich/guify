@@ -43,7 +43,9 @@ Button::Button(QString fromDir, QWidget *parent) : QFrame(parent) {
       if (icon.exists()) {
         layout->addWidget(new Icon(iconPath));
       }
-      layout->addWidget(new QLabel(""));
+      QLabel *label = new QLabel("");
+      label->setMaximumSize(0, 0);
+      layout->addWidget(label);
     }
   }
 }
