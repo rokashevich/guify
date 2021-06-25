@@ -12,7 +12,7 @@
 #include <QString>
 #include <QSvgWidget>
 
-#include "icon.hpp"
+#include "components/icon.hpp"
 Button::Button(QString fromDir, QWidget *parent) : QFrame(parent) {
   QHBoxLayout *layout = new QHBoxLayout();
   this->setLayout(layout);
