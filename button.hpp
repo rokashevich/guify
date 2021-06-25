@@ -10,4 +10,7 @@ class Button : public QFrame {
  public:
   Button(QString fromDir, QWidget *parent = nullptr);
   ~Button();
+
+ protected:
+  virtual void mousePressEvent(QMouseEvent *event);
 };

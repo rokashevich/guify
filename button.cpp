@@ -3,6 +3,7 @@
 #include <QDebug>
 #include <QDir>
 #include <QDirIterator>
+#include <QEvent>
 #include <QFile>
 #include <QFrame>
 #include <QHBoxLayout>
@@ -50,3 +51,8 @@ Button::Button(QString fromDir, QWidget *parent) : QFrame(parent) {
   }
 }
 Button::~Button() {}
+
+void Button::mousePressEvent(QMouseEvent *event) {
+  Q_UNUSED(event)
+  qDebug() << "clicked";
+}
