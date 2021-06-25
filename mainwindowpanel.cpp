@@ -37,7 +37,7 @@ MainWindowPanel::MainWindowPanel(Cfg& cfg) : MainWindow() {
     const QString type = item.takeFirst();
     if (type == "button") {
       QString path = item.takeFirst();
-      Button* button = new Button(path);
+      Button* button = new Button(path, this);
       layout->addWidget(button);
     } else {
       const QString value = item.takeFirst();

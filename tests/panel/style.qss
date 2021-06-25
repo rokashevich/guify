@@ -1,1 +1,1 @@
-QWidget { background-color: blue }
+QWidget { background-color: blue; color: cyan; }
