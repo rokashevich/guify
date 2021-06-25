@@ -25,7 +25,13 @@ MainWindowPanel::MainWindowPanel(Cfg& cfg) : MainWindow() {
   this->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowSystemMenuHint |
                        Qt::X11BypassWindowManagerHint |
                        Qt::WindowStaysOnTopHint);
+
   QHBoxLayout* layout = new QHBoxLayout();
+
+  // Чтобы после упаковки иконок и текстов в панель не было отступов.
+  layout->setSpacing(0);
+  layout->setContentsMargins(0, 0, 0, 0);
+
   // Настройки получаем вида:
   // QList(
   //    QList("langswitcher", "en,ru"),
@@ -43,6 +49,7 @@ MainWindowPanel::MainWindowPanel(Cfg& cfg) : MainWindow() {
       const QString value = item.takeFirst();
       QLabel* label = new QLabel{type + "-" + value};
       layout->addWidget(label);
+      label->setStyleSheet("*{background-color:gray;}");
     }
   }
 
