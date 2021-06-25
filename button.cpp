@@ -49,10 +49,31 @@ Button::Button(QString fromDir, QWidget *parent) : QFrame(parent) {
       layout->addWidget(label);
     }
   }
+
+  workpane_ = new QFrame();
+
+  workpane_->hide();
+  workpane_->setWindowFlags(Qt::Widget | Qt::FramelessWindowHint |
+                            Qt::X11BypassWindowManagerHint);
 }
 Button::~Button() {}
-
+#include <QPoint>
 void Button::mousePressEvent(QMouseEvent *event) {
   Q_UNUSED(event)
-  qDebug() << "clicked";
+  if (workpane_->isVisible()) {
+    workpane_->hide();
+  } else {
+    const QPoint globalPos = this->mapToGlobal(QPoint{});
+    const int panelX = globalPos.x();
+    const int panelY = globalPos.y();
+
+    const int panelW = width();
+    const int panelH = height();
+    const int workpaneW = workpane_->width();
+    const int workpaneX = panelX + panelW - workpaneW;
+    const int workpaneY = panelY + panelH;
+    qDebug() << panelX << panelY;
+    workpane_->show();
+    workpane_->move(panelX, workpaneY);
+  }
 }
