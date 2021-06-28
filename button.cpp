@@ -10,6 +10,7 @@
 #include <QIcon>
 #include <QLabel>
 #include <QPixmap>
+#include <QPoint>
 #include <QString>
 #include <QSvgWidget>
 
@@ -37,11 +38,31 @@ Button::Button(QString fromDir, QWidget *parent) : QFrame(parent) {
     const QString subdirPath = it.next();
     QString subdirName = QFileInfo(subdirPath).fileName();
     if (subdirName == "autobuttons") {
-      // TODO: выпадающая панель
+      QHBoxLayout *layout = new QHBoxLayout();
+      QDirIterator it(subdirPath, QDir::Dirs | QDir::NoDotAndDotDot);
+      while (it.hasNext()) {
+        const QString subdirPath = it.next();
+        const QString iconPath = QDir(subdirPath).filePath("icon.svg");
+        if (QFile(iconPath).exists()) {
+          const QList<QStringList> possible_scripts{{"detach.sh"},
+                                                    {"start.st", "stop.st"}};
+          Icon *icon = new Icon(iconPath);
+
+          layout->addWidget(icon);
+          icons_.append(icon);
+        }
+      }
+      workpane_ = new QFrame();
+      workpane_->hide();
+      workpane_->setWindowFlags(Qt::Widget | Qt::FramelessWindowHint |
+                                Qt::X11BypassWindowManagerHint);
+      workpane_->setWindowFlags(Qt::Widget | Qt::FramelessWindowHint |
+                                Qt::X11BypassWindowManagerHint);
+      workpane_->setMaximumSize(QSize(0, 0));
+      workpane_->setLayout(layout);
     } else {
       const QString iconPath = QDir(subdirPath).filePath("icon.svg");
-      QFile icon = QFile(iconPath);
-      if (icon.exists()) {
+      if (QFile(iconPath).exists()) {
         layout->addWidget(new Icon(iconPath));
       }
       QLabel *label = new QLabel("");
@@ -49,20 +70,12 @@ Button::Button(QString fromDir, QWidget *parent) : QFrame(parent) {
       layout->addWidget(label);
     }
   }
-
-  workpane_ = new QFrame();
-
-  workpane_->hide();
-  workpane_->setWindowFlags(Qt::Widget | Qt::FramelessWindowHint |
-                            Qt::X11BypassWindowManagerHint);
-  workpane_->setWindowFlags(Qt::Widget | Qt::FramelessWindowHint |
-                            Qt::X11BypassWindowManagerHint);
-  workpane_->setMaximumSize(QSize(10, 10));
 }
 Button::~Button() {}
-#include <QPoint>
+
 void Button::mousePressEvent(QMouseEvent *event) {
   Q_UNUSED(event)
+  if (!icons_.size()) return;
   if (workpane_->isVisible()) {
     workpane_->hide();
   } else {

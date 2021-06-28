@@ -3,6 +3,7 @@
 #include <QByteArray>
 #include <QDebug>
 #include <QDomDocument>
+#include <QEvent>
 #include <QFile>
 #include <QIcon>
 #include <QObject>
@@ -41,4 +42,9 @@ class Icon : public QSvgWidget {
   }
 
   QString color() { return color_; }
+  void mousePressEvent(QMouseEvent *event) {
+    Q_UNUSED(event)
+    setAttribute(Qt::WA_TransparentForMouseEvents, true);
+    qDebug() << "press";
+  }
 };
