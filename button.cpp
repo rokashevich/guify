@@ -55,6 +55,9 @@ Button::Button(QString fromDir, QWidget *parent) : QFrame(parent) {
   workpane_->hide();
   workpane_->setWindowFlags(Qt::Widget | Qt::FramelessWindowHint |
                             Qt::X11BypassWindowManagerHint);
+  workpane_->setWindowFlags(Qt::Widget | Qt::FramelessWindowHint |
+                            Qt::X11BypassWindowManagerHint);
+  workpane_->setMaximumSize(QSize(10, 10));
 }
 Button::~Button() {}
 #include <QPoint>
