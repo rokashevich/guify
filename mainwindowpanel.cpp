@@ -19,7 +19,7 @@
 #include <QVector>
 #include <QWidget>
 
-#include "button.hpp"
+#include "control.hpp"
 
 MainWindowPanel::MainWindowPanel(Cfg& cfg) : MainWindow() {
   this->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowSystemMenuHint |
@@ -41,9 +41,9 @@ MainWindowPanel::MainWindowPanel(Cfg& cfg) : MainWindow() {
 
   for (QStringList item : cfg.Settings()) {
     const QString type = item.takeFirst();
-    if (type == "button") {
+    if (type == "control") {
       QString path = item.takeFirst();
-      Button* button = new Button(path, this);
+      Control* button = new Control(path, this);
       layout->addWidget(button);
     } else {
       const QString value = item.takeFirst();

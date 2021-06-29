@@ -1,4 +1,4 @@
-#include "button.hpp"
+#include "control.hpp"
 
 #include <QDebug>
 #include <QDir>
@@ -15,7 +15,7 @@
 #include <QSvgWidget>
 
 #include "components/icon.hpp"
-Button::Button(QString fromDir, QWidget *parent) : QFrame(parent) {
+Control::Control(QString fromDir, QWidget *parent) : QFrame(parent) {
   QHBoxLayout *layout = new QHBoxLayout();
   this->setLayout(layout);
 
@@ -98,9 +98,9 @@ Button::Button(QString fromDir, QWidget *parent) : QFrame(parent) {
     }
   }
 }
-Button::~Button() {}
+Control::~Control() {}
 
-void Button::mousePressEvent(QMouseEvent *event) {
+void Control::mousePressEvent(QMouseEvent *event) {
   Q_UNUSED(event)
   if (!icons_.size()) return;
   if (workpane_->isVisible()) {

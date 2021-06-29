@@ -8,14 +8,14 @@
 #include <QString>
 
 #include "components/icon.hpp"
-class Button : public QFrame {
+class Control : public QFrame {
   Q_OBJECT
   QFrame *workpane_;
   QList<Icon *> icons_;
 
  public:
-  Button(QString fromDir, QWidget *parent = nullptr);
-  ~Button();
+  Control(QString fromDir, QWidget *parent = nullptr);
+  ~Control();
 
  protected:
   virtual void mousePressEvent(QMouseEvent *event);

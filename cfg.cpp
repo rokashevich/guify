@@ -79,8 +79,9 @@ void Cfg::AddPanelOptions() {
   parser_.clearPositionalArguments();
   parser_.addOption(
       {"langswitcher", "Generate panels based on a preapared folder", "path"});
-  parser_.addOption(
-      {"button", "Generate panels based on a preapared folder", "path"});
+  parser_.addOption({"control",
+                     "Generate control button based on a preapared folder",
+                     "path"});
   parser_.addOption(
       {"menu", "Generate panels based on a preapared folder", "path"});
   parser_.addOption(geometryOption_);
