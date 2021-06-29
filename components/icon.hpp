@@ -42,4 +42,14 @@ class Icon : public QSvgWidget {
   }
 
   QString color() { return color_; }
+
+  QIcon Qicon() {
+    QSvgRenderer renderer;
+    renderer.load(dom_.toByteArray());
+    QPixmap pm(sizeHint());
+    pm.fill("transparent");
+    QPainter painter(&pm);
+    renderer.render(&painter, pm.rect());
+    return QIcon(pm);
+  }
 };

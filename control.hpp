@@ -7,11 +7,11 @@
 #include <QPair>
 #include <QString>
 
-#include "components/icon.hpp"
+#include "components/actionbutton.hpp"
 class Control : public QFrame {
   Q_OBJECT
   QFrame *workpane_;
-  QList<Icon *> icons_;
+  QList<ActionButton *> actionbuttons_;
 
  public:
   Control(QString fromDir, QWidget *parent = nullptr);

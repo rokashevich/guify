@@ -19,8 +19,8 @@
 #include <QVector>
 #include <QWidget>
 
+#include "components/actionbutton.hpp"
 #include "control.hpp"
-
 MainWindowPanel::MainWindowPanel(Cfg& cfg) : MainWindow() {
   this->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowSystemMenuHint |
                        Qt::X11BypassWindowManagerHint |
