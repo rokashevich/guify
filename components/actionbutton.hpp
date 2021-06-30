@@ -15,16 +15,51 @@
 class ActionButton : public QToolButton {
   Q_OBJECT
 
-  typedef void (ActionButton::*pmemfunc_t)();
-
   const QString source_;
   const QString icon_path_;
-  QStringList scripts_;
   Icon *icon_;
 
-  QList<QPair<QStringList, pmemfunc_t>> m{{{"a"}, &ActionButton::a}};
-  void a() { qDebug() << "a"; }
-  void b() { qDebug() << "b"; }
+  typedef void (ActionButton::*pmemfunc_t)();
+  QPair<QStringList, pmemfunc_t> scripts_;
+  const QList<QPair<QStringList, pmemfunc_t>> possible_scripts_{
+      {{"detach.sh"}, &ActionButton::ClickDetach},
+      {{"start.sh", "stop.sh"}, &ActionButton::ClickStartStop}};
+
+  void ClickDetach() {
+    const auto &detach_script_name{scripts_.first.at(0)};
+    const auto &detach_script_path{QDir(source_).filePath(detach_script_name)};
+    //    qDebug() << detach_script_path;
+    _d->is_start = false;
+    _d->is_stop = false;
+    _d->is_detach = true;
+    _d->dir = "/";
+    _d->disableTimeout = 0;
+    QFileInfo fi(detach_script_path);
+    _d->detachedArgs = QStringList{};
+    _d->detachedFn = fi.absoluteFilePath();
+  }
+  void ClickStartStop() {
+    const auto &start_script_name{scripts_.first.at(0)};
+    const auto &stop_script_name{scripts_.first.at(1)};
+    const auto &start_script_path{QDir(source_).filePath(start_script_name)};
+    const auto &stop_script_path{QDir(source_).filePath(stop_script_name)};
+
+    _d->is_detach = false;
+
+    _d->startArgs = QStringList{};
+    _d->is_start = true;
+    _d->startFn = start_script_path;
+    _d->m_process.setProgram(_d->m_shell);
+    QStringList sl;
+    sl << _d->preArgs;
+    sl << _d->startFn;
+    sl << _d->startArgs;
+    _d->m_process.setArguments(sl);
+
+    _d->detachedArgs = QStringList{};
+    _d->is_stop = true;
+    _d->detachedFn = stop_script_path;
+  }
 
  public:
   ActionButton(const QString &source, QWidget *parent = nullptr)
@@ -36,10 +71,10 @@ class ActionButton : public QToolButton {
 
     icon_ = new Icon(icon_path_);
     setIcon(icon_->Qicon());
-
     init();
 
-    pmemfunc_t f = m.at(0).second;
+    // Регистрируем скрипты обрабаотки нажатий.
+    const pmemfunc_t f = scripts_.second;
     (this->*f)();
   }
 
@@ -49,13 +84,11 @@ class ActionButton : public QToolButton {
       return false;
     }
 
-    const QList<QStringList> possible_variants{{"detach.sh"},
-                                               {"start.sh", "stop.sh"}};
-    QList<QStringList> variants_found;
-    for (const auto &variant : possible_variants) {
-      const auto num_scripts_in_variant{variant.size()};
+    QList<QPair<QStringList, pmemfunc_t>> variants_found;
+    for (const auto &variant : possible_scripts_) {
+      const auto num_scripts_in_variant{variant.first.size()};
       auto num_scripts_found{0};
-      for (const auto &script_name : variant) {
+      for (const auto &script_name : variant.first) {
         const auto script_path{QDir(source_).filePath(script_name)};
         if (!QFile(script_path).exists()) {
           break;
@@ -113,45 +146,6 @@ class ActionButton : public QToolButton {
     delete _d;
   }
 
-  // задать полное наименование стартового скрипта (программы) с аргументами
-  void setStartName(const QString &fn, const QStringList &args = QStringList(),
-                    const QString &dir = QString()) {
-    _d->is_detach = false;
-    QFileInfo fi(fn);
-    _d->startArgs = args;
-    if (fi.exists()) {
-      _d->is_start = true;
-      _d->startFn = fi.absoluteFilePath();
-      _d->m_process.setProgram(_d->m_shell);
-      QStringList sl;
-      sl << _d->preArgs;
-      sl << _d->startFn;
-      sl << _d->startArgs;
-      _d->m_process.setArguments(sl);
-      if (!dir.isEmpty()) {
-        _d->m_process.setWorkingDirectory(dir);
-      }
-    } else {
-      _d->startFn = fn;
-    }
-  }
-
-  // задать полное наименование останавливающего скрипта (программы) с
-  // аргументами
-  void setStopName(const QString &fn, const QStringList &args = QStringList(),
-                   const QString &dir = QString()) {
-    _d->is_detach = false;
-    _d->dir = dir;
-    QFileInfo fi(fn);
-    _d->detachedArgs = args;
-    if (fi.exists()) {
-      _d->is_stop = true;
-      _d->detachedFn = fi.absoluteFilePath();
-    } else {
-      _d->detachedFn = fn;
-    }
-  }
-
   // задать всплывающее описание - то же самое, что setToolTip
   // void setDescription(const QString &description);
 
@@ -165,25 +159,6 @@ class ActionButton : public QToolButton {
 
   // таймаут завершения процесса - для консольных приложений достаточно 10 мс
   void setKillTimeout(int timeout) { _d->killTimeout = timeout; }
-
-  // Перевести кнопку в режим запуска процеса без отслеживания
-  // Указание нулевого значения переводит кнопку в режим запуска с отслеживанием
-  void setDetached(const QString &fn, const QStringList &args = QStringList(),
-                   const QString &dir = QString(), int timeout = 1000) {
-    if (timeout == 0) timeout = 1000;
-    _d->is_start = false;
-    _d->is_stop = false;
-    _d->is_detach = true;
-    _d->dir = dir;
-    _d->disableTimeout = timeout;
-    QFileInfo fi(fn);
-    _d->detachedArgs = args;
-    if (fi.exists()) {
-      _d->detachedFn = fi.absoluteFilePath();
-    } else {
-      _d->detachedFn = fn;
-    }
-  }
 
   // задать стиль кнопки в обычном состоянии
   void setStyleSheetNormal(QString s) { _d->styleSheetNormal = s; }
