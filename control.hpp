@@ -5,7 +5,9 @@
 #include <QList>
 #include <QObject>
 #include <QPair>
+#include <QProcess>
 #include <QString>
+#include <QWidget>
 
 #include "components/actionbutton.hpp"
 class Control : public QFrame {

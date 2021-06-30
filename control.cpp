@@ -65,9 +65,12 @@ Control::Control(QString fromDir, QWidget *parent) : QFrame(parent) {
       workpane_->setLayout(layout);
     } else {
       const QString iconPath = QDir(subdirPath).filePath("icon.svg");
-      if (QFile(iconPath).exists()) {
-        layout->addWidget(new Icon(iconPath));
+      const auto status_script_path{QDir(subdirPath).filePath("status.sh")};
+      if (!QFile(iconPath).exists() || !QFile(status_script_path).exists()) {
+        layout->addWidget(new QLabel("No icon.svg or status.sh"));
+        continue;
       }
+      layout->addWidget(new Icon(iconPath));
       QLabel *label = new QLabel("");
       label->setMaximumSize(0, 0);
       layout->addWidget(label);
