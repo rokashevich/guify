@@ -1,9 +1,9 @@
 #pragma once
-
 #include <QDir>
 #include <QFileInfo>
 #include <QMessageBox>
 #include <QObject>
+#include <QPair>
 #include <QProcess>
 #include <QStringList>
 #include <QTimerEvent>
@@ -11,34 +11,41 @@
 #include <QWidget>
 
 #include "icon.hpp"
+
 class ActionButton : public QToolButton {
   Q_OBJECT
 
-  QString source_;
+  typedef void (ActionButton::*pmemfunc_t)();
+
+  const QString source_;
+  const QString icon_path_;
+  QStringList scripts_;
   Icon *icon_;
 
+  QList<QPair<QStringList, pmemfunc_t>> m{{{"a"}, &ActionButton::a}};
+  void a() { qDebug() << "a"; }
+  void b() { qDebug() << "b"; }
+
  public:
-  //  // Конструкторы, совместимые с QToolButton
-  //  ActionButton(QWidget *parent = nullptr)
-  //      : QToolButton(parent), _d(new Private()) {
-  //    init();
-  //  }
-
   ActionButton(const QString &source, QWidget *parent = nullptr)
-      : QToolButton(parent), source_(source), _d(new Private()) {
-    if (!IsSourceParseable()) return;
+      : QToolButton(parent),
+        source_(source),
+        icon_path_(QDir(source_).filePath("icon.svg")),
+        _d(new Private()) {
+    if (!ParseSourceFiles()) return;
 
-    const QString icon_path = QDir(source).filePath("icon.svg");
-
-    icon_ = new Icon(icon_path);
+    icon_ = new Icon(icon_path_);
     setIcon(icon_->Qicon());
+
     init();
+
+    pmemfunc_t f = m.at(0).second;
+    (this->*f)();
   }
 
-  bool IsSourceParseable() {
-    const QString icon_path = QDir(source_).filePath("icon.svg");
-    if (!QFile(icon_path).exists()) {
-      setText("No `" + icon_path + "`");
+  bool ParseSourceFiles() {
+    if (!QFile(icon_path_).exists()) {
+      setText("No `" + icon_path_ + "`");
       return false;
     }
 
@@ -62,6 +69,7 @@ class ActionButton : public QToolButton {
         return false;
       }
     }
+    scripts_ = variants_found.first();
     return true;
   }
 
