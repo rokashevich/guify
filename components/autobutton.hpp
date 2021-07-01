@@ -67,7 +67,11 @@ class AutoButton : public QToolButton {
         sandbox_(sandbox),
         icon_path_(QDir(sandbox_).filePath("icon.svg")),
         _d(new Private()) {
-    if (!ParseSandbox()) return;
+    const QString verdict{SandboxSetup()};
+    if (!verdict.isEmpty()) {
+      setText(verdict);
+      return;
+    }
 
     icon_ = new Icon(icon_path_);
     setIcon(icon_->Qicon());
@@ -78,10 +82,9 @@ class AutoButton : public QToolButton {
     (this->*f)();
   }
 
-  bool ParseSandbox() {
+  QString SandboxSetup() {
     if (!QFile(icon_path_).exists()) {
-      setText("No `" + icon_path_ + "`");
-      return false;
+      return "No `" + icon_path_ + "`";
     }
 
     QList<QPair<QStringList, pmemfunc_t>> variants_found;
@@ -98,12 +101,11 @@ class AutoButton : public QToolButton {
       if (num_scripts_found == num_scripts_in_variant) {
         variants_found.append(variant);
       } else if (num_scripts_found > 0) {
-        setText("Inconsistent scripts");
-        return false;
+        return "Inconsistent scripts";
       }
     }
     scripts_ = variants_found.first();
-    return true;
+    return "";
   }
 
   //  ActionButton(const QIcon &icon, const QString &text,

@@ -14,6 +14,7 @@ class Control : public QFrame {
   Q_OBJECT
   QFrame *workpane_;
   QList<AutoButton *> actionbuttons_;
+  // auto IndicatorSandboxSetup(const QString sandbox);
 
  public:
   Control(QString fromDir, QWidget *parent = nullptr);

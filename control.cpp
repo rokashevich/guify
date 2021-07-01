@@ -16,6 +16,27 @@
 
 #include "components/autobutton.hpp"
 #include "components/icon.hpp"
+
+static auto IndicatorSandboxSetup(const QString sandbox) {
+  struct {
+    QString icon_path;
+    QString status_script_path;
+    QString verdict{};
+  } s;
+  s.icon_path = QDir(sandbox).filePath("icon.svg");
+  s.status_script_path = QDir(sandbox).filePath("status.sh");
+  const bool icon_exists = QFile(s.icon_path).exists();
+  const bool script_exists = QFile(s.status_script_path).exists();
+  if (!icon_exists && !script_exists) {
+    s.verdict = "No icon.svg or status.sh";
+  } else if (!icon_exists) {
+    s.verdict = "No icon.svg";
+  } else if (!script_exists) {
+    s.verdict = "No icon.svg";
+  }
+  return s;
+}
+
 Control::Control(QString fromDir, QWidget *parent) : QFrame(parent) {
   QHBoxLayout *layout = new QHBoxLayout();
   this->setLayout(layout);
@@ -64,13 +85,13 @@ Control::Control(QString fromDir, QWidget *parent) : QFrame(parent) {
       }
       workpane_->setLayout(layout);
     } else {
-      const QString iconPath = QDir(subdirPath).filePath("icon.svg");
-      const auto status_script_path{QDir(subdirPath).filePath("status.sh")};
-      if (!QFile(iconPath).exists() || !QFile(status_script_path).exists()) {
-        layout->addWidget(new QLabel("No icon.svg or status.sh"));
+      auto [icon_path, status_script_path, verdict] =
+          IndicatorSandboxSetup(subdirPath);
+      if (!verdict.isEmpty()) {
+        layout->addWidget(new QLabel(verdict));
         continue;
       }
-      layout->addWidget(new Icon(iconPath));
+      layout->addWidget(new Icon(icon_path));
       QLabel *label = new QLabel("");
       label->setMaximumSize(0, 0);
       layout->addWidget(label);
