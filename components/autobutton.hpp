@@ -15,7 +15,7 @@
 class AutoButton : public QToolButton {
   Q_OBJECT
 
-  const QString source_;
+  const QString sandbox_;
   const QString icon_path_;
   Icon *icon_;
 
@@ -27,7 +27,7 @@ class AutoButton : public QToolButton {
 
   void ClickDetach() {
     const auto &detach_script_name{scripts_.first.at(0)};
-    const auto &detach_script_path{QDir(source_).filePath(detach_script_name)};
+    const auto &detach_script_path{QDir(sandbox_).filePath(detach_script_name)};
     //    qDebug() << detach_script_path;
     _d->is_start = false;
     _d->is_stop = false;
@@ -41,8 +41,8 @@ class AutoButton : public QToolButton {
   void ClickStartStop() {
     const auto &start_script_name{scripts_.first.at(0)};
     const auto &stop_script_name{scripts_.first.at(1)};
-    const auto &start_script_path{QDir(source_).filePath(start_script_name)};
-    const auto &stop_script_path{QDir(source_).filePath(stop_script_name)};
+    const auto &start_script_path{QDir(sandbox_).filePath(start_script_name)};
+    const auto &stop_script_path{QDir(sandbox_).filePath(stop_script_name)};
 
     _d->is_detach = false;
 
@@ -62,12 +62,12 @@ class AutoButton : public QToolButton {
   }
 
  public:
-  AutoButton(const QString &source, QWidget *parent = nullptr)
+  AutoButton(const QString &sandbox, QWidget *parent = nullptr)
       : QToolButton(parent),
-        source_(source),
-        icon_path_(QDir(source_).filePath("icon.svg")),
+        sandbox_(sandbox),
+        icon_path_(QDir(sandbox_).filePath("icon.svg")),
         _d(new Private()) {
-    if (!ParseSourceFiles()) return;
+    if (!ParseSandbox()) return;
 
     icon_ = new Icon(icon_path_);
     setIcon(icon_->Qicon());
@@ -78,7 +78,7 @@ class AutoButton : public QToolButton {
     (this->*f)();
   }
 
-  bool ParseSourceFiles() {
+  bool ParseSandbox() {
     if (!QFile(icon_path_).exists()) {
       setText("No `" + icon_path_ + "`");
       return false;
@@ -89,7 +89,7 @@ class AutoButton : public QToolButton {
       const auto num_scripts_in_variant{variant.first.size()};
       auto num_scripts_found{0};
       for (const auto &script_name : variant.first) {
-        const auto script_path{QDir(source_).filePath(script_name)};
+        const auto script_path{QDir(sandbox_).filePath(script_name)};
         if (!QFile(script_path).exists()) {
           break;
         }
