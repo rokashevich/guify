@@ -9,11 +9,11 @@
 #include <QString>
 #include <QWidget>
 
-#include "components/actionbutton.hpp"
+#include "components/autobutton.hpp"
 class Control : public QFrame {
   Q_OBJECT
   QFrame *workpane_;
-  QList<ActionButton *> actionbuttons_;
+  QList<AutoButton *> actionbuttons_;
 
  public:
   Control(QString fromDir, QWidget *parent = nullptr);

@@ -19,7 +19,7 @@
 #include <QVector>
 #include <QWidget>
 
-#include "components/actionbutton.hpp"
+#include "components/autobutton.hpp"
 #include "control.hpp"
 MainWindowPanel::MainWindowPanel(Cfg& cfg) : MainWindow() {
   this->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowSystemMenuHint |

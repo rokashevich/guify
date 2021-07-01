@@ -14,7 +14,7 @@
 #include <QString>
 #include <QSvgWidget>
 
-#include "components/actionbutton.hpp"
+#include "components/autobutton.hpp"
 #include "components/icon.hpp"
 Control::Control(QString fromDir, QWidget *parent) : QFrame(parent) {
   QHBoxLayout *layout = new QHBoxLayout();
@@ -46,7 +46,7 @@ Control::Control(QString fromDir, QWidget *parent) : QFrame(parent) {
       } else {
         while (it.hasNext()) {
           const auto autobutton_path = it.next();
-          actionbuttons_.append(new ActionButton(autobutton_path));
+          actionbuttons_.append(new AutoButton(autobutton_path));
         }
       }
 

@@ -12,18 +12,18 @@
 
 #include "icon.hpp"
 
-class ActionButton : public QToolButton {
+class AutoButton : public QToolButton {
   Q_OBJECT
 
   const QString source_;
   const QString icon_path_;
   Icon *icon_;
 
-  typedef void (ActionButton::*pmemfunc_t)();
+  typedef void (AutoButton::*pmemfunc_t)();
   QPair<QStringList, pmemfunc_t> scripts_;
   const QList<QPair<QStringList, pmemfunc_t>> possible_scripts_{
-      {{"detach.sh"}, &ActionButton::ClickDetach},
-      {{"start.sh", "stop.sh"}, &ActionButton::ClickStartStop}};
+      {{"detach.sh"}, &AutoButton::ClickDetach},
+      {{"start.sh", "stop.sh"}, &AutoButton::ClickStartStop}};
 
   void ClickDetach() {
     const auto &detach_script_name{scripts_.first.at(0)};
@@ -62,7 +62,7 @@ class ActionButton : public QToolButton {
   }
 
  public:
-  ActionButton(const QString &source, QWidget *parent = nullptr)
+  AutoButton(const QString &source, QWidget *parent = nullptr)
       : QToolButton(parent),
         source_(source),
         icon_path_(QDir(source_).filePath("icon.svg")),
@@ -138,7 +138,7 @@ class ActionButton : public QToolButton {
   //    setDetached(startName, QStringList(), QString(), timeout);
   //  }
 
-  ~ActionButton() {
+  ~AutoButton() {
     if (_d->m_process.state() == QProcess::Running) {
       _d->m_process.terminate();
       _d->m_process.kill();
@@ -321,20 +321,19 @@ class ActionButton : public QToolButton {
     _d->m_shell = bA + QString("\\cmd.exe");
     _d->preArgs << QString("/C");
 #endif
-    connect(this, &ActionButton::clicked, this,
-            &ActionButton::actionButtonClicked);
+    connect(this, &AutoButton::clicked, this, &AutoButton::actionButtonClicked);
     connect(&_d->m_process, &QProcess::readyReadStandardOutput, this,
-            &ActionButton::processStdout);
+            &AutoButton::processStdout);
     connect(&_d->m_process, &QProcess::readyReadStandardError, this,
-            &ActionButton::processStderr);
+            &AutoButton::processStderr);
     connect(&_d->m_process, &QProcess::started, this,
-            &ActionButton::processStarted);
+            &AutoButton::processStarted);
     connect(&_d->m_process,
             static_cast<void (QProcess::*)(int, QProcess::ExitStatus)>(
                 &QProcess::finished),
-            this, &ActionButton::processFinished);
+            this, &AutoButton::processFinished);
     connect(&_d->m_process, &QProcess::errorOccurred, this,
-            &ActionButton::processError);
+            &AutoButton::processError);
   }
 
   struct Private {
