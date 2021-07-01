@@ -37,7 +37,6 @@ MainWindowPanel::MainWindowPanel(Cfg& cfg) : MainWindow() {
   //    QList("langswitcher", "en,ru"),
   //    QList("menu", "MENUFILE"), QList("button", "/path")
   // )
-  qDebug() << cfg.Settings();
 
   for (QStringList item : cfg.Settings()) {
     const QString type = item.takeFirst();

@@ -11,6 +11,7 @@
 #include <QLabel>
 #include <QPixmap>
 #include <QPoint>
+#include <QProcess>
 #include <QString>
 #include <QSvgWidget>
 
@@ -91,14 +92,33 @@ Control::Control(QString fromDir, QWidget *parent) : QFrame(parent) {
         layout->addWidget(new QLabel(verdict));
         continue;
       }
-      layout->addWidget(new Icon(icon_path));
-      QLabel *label = new QLabel("");
+
+      Icon *icon = new Icon(icon_path);
+      QLabel *label = new QLabel;
+      RunStatusScript(status_script_path, icon, label);
+
+      layout->addWidget(icon);
       label->setMaximumSize(0, 0);
       layout->addWidget(label);
     }
   }
 }
 Control::~Control() {}
+
+void Control::RunStatusScript(QString path, Icon *icon, QLabel *label) {
+  QProcess *p{new QProcess};
+  connect(p, &QProcess::readyReadStandardOutput, [icon, label, p, this]() {
+    while (p->canReadLine()) {
+      const QByteArray b{p->readLine()};
+      const QString s{QString(b).trimmed()};
+      label->setText(s);
+      const int h{this->height()};
+      const int w{this->width()};
+      label->setMaximumSize(h, w);  // TODO подкинуть размер панели
+    }
+  });
+  p->start("/bin/bash", {path});
+}
 
 void Control::mousePressEvent(QMouseEvent *event) {
   Q_UNUSED(event)

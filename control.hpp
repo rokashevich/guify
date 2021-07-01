@@ -2,6 +2,7 @@
 
 #include <QEvent>
 #include <QFrame>
+#include <QLabel>
 #include <QList>
 #include <QObject>
 #include <QPair>
@@ -10,11 +11,12 @@
 #include <QWidget>
 
 #include "components/autobutton.hpp"
+#include "components/icon.hpp"
 class Control : public QFrame {
   Q_OBJECT
   QFrame *workpane_;
   QList<AutoButton *> actionbuttons_;
-  // auto IndicatorSandboxSetup(const QString sandbox);
+  void RunStatusScript(QString script_path, Icon *icon, QLabel *label);
 
  public:
   Control(QString fromDir, QWidget *parent = nullptr);
