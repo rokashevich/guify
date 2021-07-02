@@ -118,6 +118,8 @@ QString Cfg::ConfigurePanel() {
   QList<QVariant> variable;
   QMap<QString, int> counter;
   for (auto& optionName : parser_.optionNames()) {
+    const QStringList possible{"menu", "langswitcher", "control"};
+    if (!possible.contains(optionName)) continue;
     const int index = counter.contains(optionName) ? counter[optionName] : 0;
     counter.insert(optionName, index + 1);
 
