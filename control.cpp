@@ -110,6 +110,7 @@ Control::Control(QString fromDir, QWidget *parent) : QFrame(parent) {
 Control::~Control() {}
 
 void Control::RunStatusScript(QString path, Icon *icon, QLabel *label) {
+  qDebug() << "started" << path;
   QProcess *p{new QProcess};
   connect(p, &QProcess::readyReadStandardOutput, [icon, label, p, this]() {
     while (p->canReadLine()) {
@@ -120,13 +121,19 @@ void Control::RunStatusScript(QString path, Icon *icon, QLabel *label) {
         label->setText(e.errorString());
       } else {
         const QJsonObject o{j.object()};
+        qDebug() << o;
         if (o.contains("label")) {
           const QString text{o.value("label").toString()};
           label->setText(text);
-          const int width = label->fontMetrics().boundingRect(text).width();
-          label->setFixedWidth(width);
+        }
+        if (o.contains("color")) {
+          const QString color{o.value("color").toString()};
+          icon->setColor(color);
         }
       }
+      const QString text{label->text()};
+      const int width{label->fontMetrics().boundingRect(text).width()};
+      label->setFixedWidth(width);
     }
   });
   p->start("/bin/bash", {path});
