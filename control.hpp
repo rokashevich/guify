@@ -12,11 +12,20 @@
 
 #include "components/autobutton.hpp"
 #include "components/icon.hpp"
+
+// Обёртка над QFrame чтобы можно было применять стили из style.qss.
+class Workpane : public QFrame {
+  Q_OBJECT  // Обязательно, чтобы стили работали!
+};
+
 class Control : public QFrame {
   Q_OBJECT
-  QFrame *workpane_;
+  QByteArray style_;
+  Workpane workpane_;
   QList<AutoButton *> actionbuttons_;
   void RunStatusScript(QString script_path, Icon *icon, QLabel *label);
+  void ApplyStyleReleased();
+  void ApplyStylePressed();
 
  public:
   Control(QString fromDir, QWidget *parent = nullptr);

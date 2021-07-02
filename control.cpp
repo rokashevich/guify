@@ -52,13 +52,6 @@ Control::Control(QString fromDir, QWidget *parent) : QFrame(parent) {
   }
   const QString dirFullPath = dir.absolutePath();
 
-  // Применяем  файл со стилями, если есть.
-  QFile qss = QFile(dir.filePath("style.qss"));
-  if (qss.exists()) {
-    qss.open(QFile::ReadOnly);
-    this->setStyleSheet(qss.readAll());
-  }
-
   QDirIterator it(dirFullPath, QDir::Dirs | QDir::NoDotAndDotDot);
   while (it.hasNext()) {
     const QString subdirPath = it.next();
@@ -75,19 +68,19 @@ Control::Control(QString fromDir, QWidget *parent) : QFrame(parent) {
         }
       }
 
-      workpane_ = new QFrame();
-      workpane_->hide();
-      workpane_->setWindowFlags(Qt::Widget | Qt::FramelessWindowHint |
-                                Qt::X11BypassWindowManagerHint);
-      workpane_->setWindowFlags(Qt::Widget | Qt::FramelessWindowHint |
-                                Qt::X11BypassWindowManagerHint);
-      workpane_->setMaximumSize(QSize(0, 0));
+      //      workpane_ = new QFrame();
+      workpane_.hide();
+      workpane_.setWindowFlags(Qt::Widget | Qt::FramelessWindowHint |
+                               Qt::X11BypassWindowManagerHint);
+      workpane_.setWindowFlags(Qt::Widget | Qt::FramelessWindowHint |
+                               Qt::X11BypassWindowManagerHint);
+      //      workpane_.setMaximumSize(QSize(0, 0));
 
       QHBoxLayout *layout = new QHBoxLayout();  // для автокнопок
       for (auto &ab : actionbuttons_) {
         layout->addWidget(ab);
       }
-      workpane_->setLayout(layout);
+      workpane_.setLayout(layout);
     } else {
       auto [icon_path, status_script_path, verdict] =
           IndicatorSandboxSetup(subdirPath);
@@ -106,13 +99,24 @@ Control::Control(QString fromDir, QWidget *parent) : QFrame(parent) {
       label->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
     }
   }
+
+  layout->setSpacing(0);
+  layout->setContentsMargins(0, 0, 0, 0);
+
+  // Применяем  файл со стилями, если есть.
+  QFile qss = QFile(dir.filePath("style.qss"));
+  if (qss.exists()) {
+    qss.open(QFile::ReadOnly);
+    style_ = qss.readAll();
+    workpane_.setStyleSheet(style_);
+    ApplyStyleReleased();
+  }
 }
 Control::~Control() {}
 
 void Control::RunStatusScript(QString path, Icon *icon, QLabel *label) {
-  qDebug() << "started" << path;
   QProcess *p{new QProcess};
-  connect(p, &QProcess::readyReadStandardOutput, [icon, label, p, this]() {
+  connect(p, &QProcess::readyReadStandardOutput, [icon, label, p]() {
     while (p->canReadLine()) {
       const QByteArray b{p->readLine()};
       QJsonParseError e;
@@ -121,7 +125,6 @@ void Control::RunStatusScript(QString path, Icon *icon, QLabel *label) {
         label->setText(e.errorString());
       } else {
         const QJsonObject o{j.object()};
-        qDebug() << o;
         if (o.contains("label")) {
           const QString text{o.value("label").toString()};
           label->setText(text);
@@ -142,8 +145,9 @@ void Control::RunStatusScript(QString path, Icon *icon, QLabel *label) {
 void Control::mousePressEvent(QMouseEvent *event) {
   Q_UNUSED(event)
   if (!actionbuttons_.size()) return;
-  if (workpane_->isVisible()) {
-    workpane_->hide();
+  if (workpane_.isVisible()) {
+    workpane_.hide();
+    ApplyStyleReleased();
   } else {
     const QPoint globalPos = this->mapToGlobal(QPoint{});
     const int panelX = globalPos.x();
@@ -151,10 +155,20 @@ void Control::mousePressEvent(QMouseEvent *event) {
 
     const int panelW = width();
     const int panelH = height();
-    const int workpaneW = workpane_->width();
+    const int workpaneW = workpane_.width();
     const int workpaneX = panelX + panelW - workpaneW;
     const int workpaneY = panelY + panelH;
-    workpane_->show();
-    workpane_->move(panelX, workpaneY);
+    workpane_.show();
+    workpane_.move(panelX, workpaneY);
+    ApplyStylePressed();
   }
+}
+
+void Control::ApplyStyleReleased() {
+  setObjectName("released");
+  setStyleSheet(style_);
+}
+void Control::ApplyStylePressed() {
+  setObjectName("pressed");
+  setStyleSheet(style_);
 }

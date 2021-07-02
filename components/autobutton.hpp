@@ -75,6 +75,7 @@ class AutoButton : public QToolButton {
 
     icon_ = new Icon(icon_path_);
     setIcon(icon_->Qicon());
+    setIconSize(icon_->minimumSize());
     init();
 
     // Регистрируем скрипты обрабаотки нажатий.
@@ -107,38 +108,6 @@ class AutoButton : public QToolButton {
     scripts_ = variants_found.first();
     return "";
   }
-
-  //  ActionButton(const QIcon &icon, const QString &text,
-  //               QWidget *parent = nullptr)
-  //      : QToolButton(parent), _d(new Private()) {
-  //    setIcon(icon);
-  //    setText(text);
-  //    init();
-  //  }
-
-  // Кнопка, запускающей процесс с отслеживанием состояния
-  //  ActionButton(const QIcon &icon, const QString &text, const QString
-  //  &startName,
-  //               const QString &stopName = QString(), QWidget *parent =
-  //               nullptr)
-  //      : QToolButton(parent), _d(new Private()) {
-  //    setIcon(icon);
-  //    setText(text);
-  //    init();
-  //    setStartName(startName);
-  //    setStopName(stopName);
-  //  }
-
-  // Кнопка, запускающей отсоединенный процесс не чаще чем timeout миллисекунд
-  //  ActionButton(const QIcon &icon, const QString &text, const QString
-  //  &startName,
-  //               int timeout /*= 1000*/, QWidget *parent = nullptr)
-  //      : QToolButton(parent), _d(new Private()) {
-  //    setIcon(icon);
-  //    setText(text);
-  //    init();
-  //    setDetached(startName, QStringList(), QString(), timeout);
-  //  }
 
   ~AutoButton() {
     if (_d->m_process.state() == QProcess::Running) {
@@ -315,7 +284,7 @@ class AutoButton : public QToolButton {
       this->setToolButtonStyle(Qt::ToolButtonIconOnly);
     else
       this->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
-    resize(QSize(64, 64));
+      //    resize(QSize(164, 164));
 #ifdef WIN32
     QByteArray bA;
     bA.resize(1024);
@@ -379,7 +348,7 @@ class AutoButton : public QToolButton {
           infoText(),
           dir(),
           styleSheetNormal(),
-          styleSheetPressed() {}
+          styleSheetPressed{"*{background:PaleGreen;}"} {}
   };
   Private *_d;
 };

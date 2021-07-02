@@ -1,1 +1,4 @@
-QWidget { background-color: #538ed7; color: #ffffff; }
+Control#released { background: #538ed7; }
+Control#pressed { background: #4272ac;  }
+QLabel { color: #ffffff; }
+Workpane { border: 4px solid #4272ac; }
