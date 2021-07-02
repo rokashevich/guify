@@ -123,10 +123,7 @@ void Control::RunStatusScript(QString path, Icon *icon, QLabel *label) {
         if (o.contains("label")) {
           const QString text{o.value("label").toString()};
           label->setText(text);
-          // рассчитываем ширину лейбла на пробел больше чем текст, чтоб не
-          // совсем к границам было
-          const int width =
-              label->fontMetrics().boundingRect(" " + text).width();
+          const int width = label->fontMetrics().boundingRect(text).width();
           label->setFixedWidth(width);
         }
       }
