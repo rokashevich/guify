@@ -159,7 +159,7 @@ void Control::mousePressEvent(QMouseEvent *event) {
     const int workpaneX = panelX + panelW - workpaneW;
     const int workpaneY = panelY + panelH;
     workpane_.show();
-    workpane_.move(panelX, workpaneY);
+    workpane_.move(panelX - workpaneW + panelW, workpaneY);
     ApplyStylePressed();
   }
 }
