@@ -1,7 +1,9 @@
-sleep 5
+sleep 1
+t=7
 n=1
 while true; do
-	echo 1,printer $n
+	echo '{"active":'$t'}'
 	n=$((n+1))
+	((t^=1))
 	sleep 1
 done

@@ -8,12 +8,15 @@
 #include <QFrame>
 #include <QHBoxLayout>
 #include <QIcon>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonParseError>
 #include <QLabel>
 #include <QPixmap>
 #include <QPoint>
 #include <QProcess>
+#include <QSizePolicy>
 #include <QString>
-#include <QSvgWidget>
 
 #include "components/autobutton.hpp"
 #include "components/icon.hpp"
@@ -98,8 +101,9 @@ Control::Control(QString fromDir, QWidget *parent) : QFrame(parent) {
       RunStatusScript(status_script_path, icon, label);
 
       layout->addWidget(icon);
-      label->setMaximumSize(0, 0);
       layout->addWidget(label);
+      label->setMaximumWidth(0);
+      label->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
     }
   }
 }
@@ -110,11 +114,22 @@ void Control::RunStatusScript(QString path, Icon *icon, QLabel *label) {
   connect(p, &QProcess::readyReadStandardOutput, [icon, label, p, this]() {
     while (p->canReadLine()) {
       const QByteArray b{p->readLine()};
-      const QString s{QString(b).trimmed()};
-      label->setText(s);
-      const int h{this->height()};
-      const int w{this->width()};
-      label->setMaximumSize(h, w);  // TODO подкинуть размер панели
+      QJsonParseError e;
+      QJsonDocument j{QJsonDocument::fromJson(b, &e)};
+      if (e.error != QJsonParseError::NoError) {
+        label->setText(e.errorString());
+      } else {
+        const QJsonObject o{j.object()};
+        if (o.contains("label")) {
+          const QString text{o.value("label").toString()};
+          label->setText(text);
+          // рассчитываем ширину лейбла на пробел больше чем текст, чтоб не
+          // совсем к границам было
+          const int width =
+              label->fontMetrics().boundingRect(" " + text).width();
+          label->setFixedWidth(width);
+        }
+      }
     }
   });
   p->start("/bin/bash", {path});
