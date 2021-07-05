@@ -1,13 +1,34 @@
 #include "gui.hpp"
 
 #include <QDebug>
+#include <QEvent>
 
+#include "cfg.hpp"
 #include "mainwindowdialog.hpp"
 #include "mainwindowosd.hpp"
 #include "mainwindowpanel.hpp"
 #include "mainwindowusage.hpp"
 
-Gui::Gui(Cfg& cfg) : QObject() {
+class ResizeEventFilter : public QObject {
+  Cfg &cfg_;
+
+ public:
+  ResizeEventFilter(Cfg &cfg) : cfg_{cfg} {}
+  ~ResizeEventFilter() {}
+
+ protected:
+  bool eventFilter(QObject *obj, QEvent *event) {
+    if (event->type() == QEvent::Resize) {
+      QWidget *w = qobject_cast<QWidget *>(obj);
+      cfg_.ApplyAfterShown(*w);
+      return true;
+    } else {
+      return QObject::eventFilter(obj, event);
+    }
+  }
+};
+
+Gui::Gui(Cfg &cfg) : QObject() {
   if (cfg.ConfigError().length() > 0)
     mainwindow_ = new MainWindowUsage(cfg);
   else {
@@ -26,8 +47,11 @@ Gui::Gui(Cfg& cfg) : QObject() {
     }
   }
 
+  ResizeEventFilter *filter = new ResizeEventFilter{cfg};
+  mainwindow_->installEventFilter(filter);
+
   mainwindow_->show();
-  cfg.ApplyAfterShown(*mainwindow_);
+
   //  QObject::connect(this, &Gui::NumberIndexChanged, mainwindow_,
   //                   &MainWindow::NumberIndexChanged);
 }

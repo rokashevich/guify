@@ -23,6 +23,7 @@ class Control : public QFrame {
   QByteArray style_;
   Workpane workpane_;
   QList<AutoButton *> actionbuttons_;
+  int width_{0};
   void RunStatusScript(QString script_path, Icon *icon, QLabel *label);
   void ApplyStyleReleased();
   void ApplyStylePressed();

@@ -116,7 +116,7 @@ Control::~Control() {}
 
 void Control::RunStatusScript(QString path, Icon *icon, QLabel *label) {
   QProcess *p{new QProcess};
-  connect(p, &QProcess::readyReadStandardOutput, [icon, label, p]() {
+  connect(p, &QProcess::readyReadStandardOutput, [icon, label, p, this]() {
     while (p->canReadLine()) {
       const QByteArray b{p->readLine()};
       QJsonParseError e;
@@ -136,7 +136,10 @@ void Control::RunStatusScript(QString path, Icon *icon, QLabel *label) {
       }
       const QString text{label->text()};
       const int width{label->fontMetrics().boundingRect(text).width()};
-      label->setFixedWidth(width);
+      if (width > width_) {
+        width_ = width;
+        label->setFixedWidth(width_);
+      }
     }
   });
   p->start("/bin/bash", {path});
@@ -149,16 +152,15 @@ void Control::mousePressEvent(QMouseEvent *event) {
     workpane_.hide();
     ApplyStyleReleased();
   } else {
+    workpane_.show();
     const QPoint globalPos = this->mapToGlobal(QPoint{});
     const int panelX = globalPos.x();
     const int panelY = globalPos.y();
-
     const int panelW = width();
     const int panelH = height();
     const int workpaneW = workpane_.width();
     const int workpaneX = panelX + panelW - workpaneW;
     const int workpaneY = panelY + panelH;
-    workpane_.show();
     workpane_.move(panelX - workpaneW + panelW, workpaneY);
     ApplyStylePressed();
   }
