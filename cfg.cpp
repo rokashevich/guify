@@ -30,9 +30,14 @@
 Cfg::Cfg(const QStringList& arguments)
     : QObject(), arguments_{arguments}, config_error_("") {
   QCoreApplication::setApplicationName("guify");
+  QCoreApplication::setApplicationVersion(VERSION);
   parser_.addHelpOption();
+  parser_.addVersionOption();
+  parser_.process(arguments);
+
   parser_.addPositionalArgument("mode", "dialog/osd/panel");
   parser_.parse(arguments);
+
   const QStringList args = parser_.positionalArguments();
   const QString mode = args.isEmpty() ? QString() : args.first();
   QString errorMessage = "";
